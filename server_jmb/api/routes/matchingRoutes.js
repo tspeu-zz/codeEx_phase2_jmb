@@ -9,9 +9,13 @@ const matchingCtrl = new MatchinController();
 
 router.post('/match',  (req, res) => {
 
-    matchingCtrl.matchingWorker(req);
-
-    res.send('POST  from matching router tu'+ JSON.stringify(req.body));
+    matchingCtrl.matchingWorker(req, res);
+    
+    res.send({ 
+        "msm ": matchingCtrl.msmOut,
+        "err" : matchingCtrl.msmErr,
+        "res": matchingCtrl.matching
+        });
 });
 
 
