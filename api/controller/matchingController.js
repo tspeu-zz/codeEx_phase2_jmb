@@ -16,7 +16,7 @@ class MatchingController {
 
     matchingWorker(req, res) {
 
-        let data = req.body;
+        //let data = req.body;
         let workersList = req.body.workers;
         let shiftList = req.body.shifts;
         this.matching = [];
