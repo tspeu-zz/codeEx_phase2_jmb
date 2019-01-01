@@ -14,7 +14,7 @@ router.post('/match',  (req, res) => {
     res.send({ 
         "msm ": matchingCtrl.msmOut,
         "err" : matchingCtrl.msmErr,
-        "res": matchingCtrl.matching
+        "res": matchingCtrl.matchingList
         });
 });
 

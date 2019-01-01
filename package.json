@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "test": "mocha **/*.test.js",
+    "test": "mocha api/**/*.test.js",
     "test-watch": "nodemon --exec \"npm test\""
   },
   "author": "jm_b",
