@@ -28,5 +28,5 @@ it('should check for SHIFTS empty array ', () => {
         throw new Error(`Value not correct expected ${isEmpty} but got ${res}`);
 
     }
-}) ;
+});
 
