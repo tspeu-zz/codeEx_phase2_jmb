@@ -18,7 +18,7 @@ class MatchingController {
     
 
     matchingWorker(req, res) {
-//TODO REFACTOR
+
         //input
         let data = req.body;
         let workersList = req.body.workers;
@@ -42,51 +42,66 @@ class MatchingController {
         let availableWorkerFound = false;
         let shitAssigned = false;
 
-        //sort list of workers
-        // let sortedWorkers = _.sortBy(workersList, ['availability.length', 'payrate']);
-        let sortedWorkers = _.sortBy(workersList, ['availability.length']);//, 'payrate'
+        //VALIDATION
 
-        let countID = 1;    
-        for (let worker of sortedWorkers){
+    if(checkWorkerList ) {
+        console.log('CHECKEA WORKER', checkWorkerList);
+        this.msmOut = "THERES NO ANY WORKER";
+        this.msmErr= "No optimal solution found";
+        this.matchingList.push(data);
+    } 
+    
+    else {
+        
+        if (checkShiftList) {
+            console.log('CHECKEA SHIFTS', checkShiftList);
+            this.msmOut +="THERES NO ANY SHIFTS";
+            this.msmErr= "No optimal solution found";
+            this.matchingList.push(data);
+        }
+        else {       
+            
+            //list of workers sorted by amount of days availables
+            // let sortedWorkers = _.sortBy(workersList, ['availability.length', 'payrate']);
+            let sortedWorkers = _.sortBy(workersList, ['availability.length']);//, 'payrate'
+
+            let countID = 1; 
+        //TODO REFACOR
+        for (let worker of sortedWorkers) {
             worker.assignedshift = false;
             worker.canassigned = false;
+            worker.hasmoreavailables = false;
         }
-
-
+        
+        
         for (let shift of shiftList)  {
             let day = shift.day;
-        console.log('*********************->DAY: ************* ', day);
-
+                                console.log('*********************->DAY: ************* ', day);
+            
         //ITERAR TRUE WORKER
             for (let worker of sortedWorkers) {
-        //TODO AGREGAR FLAG NO TIENE TURNO ASIGNADO AUN
+                //TODO AGREGAR FLAG NO TIENE TURNO ASIGNADO AUN
         // worker.assignedshift = false;    
             
-                console.log('-----------------> worker: ', worker);
-                // console.log('worker.availability<>> ', worker.availability);
-                // console.log('worker.assignedshift>> ', worker.assignedshift);
-                console.log('--------------------------------------');
+                                console.log('-----------------> worker: ', worker);
+                                console.log('--------------------------------------');
             
             //check if exists a worker with a day avaible with the day shift
             let index = worker.availability.findIndex(k => k== day);
-        
-            //const index = worker.availability.indexOf(day);
-            //console.log('---INDEX --------->', index);
-
-                //&&  worker.assignedshift == false
-                if (index !== -1 ) {
-                availableWorkerFound = true;
-            //console.log('------->se encuentra el dia '+day+' de la lista ' + availableWorkerFound);
-        
-            //TODO AGREGAR FLAG DE YA TIENE UN TURNO->
-                worker.assignedshift = true;
             
-                //eliminated the day for the actual worker
+            //&&  worker.assignedshift == false
+            if (index !== -1 ) {
+                availableWorkerFound = true;
+                
+                //TODO AGREGAR FLAG DE YA TIENE UN TURNO->
+                worker.assignedshift = true;
+                worker.hasmoreavailables = (worker.availability.length > 0) ? true: false;
+
+                //TODO not realy necessary eliminated the day for the actual worker
                 worker.availability.splice(index, 1);
-                // console.log('------->elimina el dia '+day+' de la lista>'+ worker);
-
-                //
-
+                //TODO ELIMININATED FOR ALL WORKER
+                
+                //add matching
                 this.matching.idMatch = countID;
                 this.matching.idShift = shift.id;
                 this.matching.idWorker = worker.id;
@@ -100,16 +115,18 @@ class MatchingController {
                     'payrate':  this.matching.workerPayRate,
                     'shift': this.matching.dayShift 
                 });
-
+                
                 countID ++;
-
-                //vuelves a ordenar->
+                
+                //SORT AGAIN->
                 sortedWorkers = _.sortBy(sortedWorkers, ['availability.length', 'payrate']);
                 console.log('nuevo sortedWorkers-->>>>', sortedWorkers)
+                
                 break;
-                }
             }
-    
+            
+        }
+        
         if (availableWorkerFound === false) {
             //no hay shift disponibles->
             this.msmOut = `There are no workers available for the required ${shiftsWord}`;
@@ -119,15 +136,39 @@ class MatchingController {
         
         allShiftsTaken = true;    
     }
-
+    
         if (allShiftsTaken === false) {
             this.msmErr = "No optimal solution found"
             console.log("No optimal solution found");
+            this.matchingList.push(data);
+        }
+    }
+  }
+ }
+//
+    eliminatedEqual(shifts, workers) {
+
+        for(let j=0; j < workers.availability.length; j++){
+
+
+            worker.availability.splice(index, 1);
         }
 
+
+
+        for(let i=0;i < shifts.length; i ++) {
+            let index = worker.availability.findIndex(k => k== shift[i].day);
+        }
+        
+
+        for(let w=0; w < workers.length; w++) {
+
+        }
+
+        return workers;
     }
-    
-    
+
+
 }
 
 module.exports = MatchingController;

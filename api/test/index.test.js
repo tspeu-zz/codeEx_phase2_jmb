@@ -18,7 +18,7 @@ it('should check for WORKERS empty array ', () => {
 
     }
 }) ;
-//
+//MUST PASS
 it('should check for SHIFTS empty array ', () => {
     let res = util.checkEmptyArrList(shiftList);
     let isEmpty = false; 
