@@ -62,8 +62,7 @@ class MatchingController {
         else {       
             
             //list of workers sorted by amount of days availables
-            // let sortedWorkers = _.sortBy(workersList, ['availability.length', 'payrate']);
-            let sortedWorkers = _.sortBy(workersList, ['availability.length']);//, 'payrate'
+            let sortedWorkers = _.sortBy(workersList, ['availability.length','payrate']);//
 
             let countID = 1; 
         //TODO REFACOR
@@ -81,19 +80,14 @@ class MatchingController {
             
         //ITERAR TRUE WORKER
             for (let worker of sortedWorkers) {
-                //TODO AGREGAR FLAG NO TIENE TURNO ASIGNADO AUN
-        // worker.assignedshift = false;    
-            
-// console.log('-----------------> worker: ', worker);
-// console.log('--------------------------------------');
-            
+ 
             //check if exists a worker with a day avaible with the day shift
             let index = worker.availability.findIndex(k => k== day);
             
 //SOLO SE ASIGNA A LOS QUE NO TIENEN TURNO AUN
 // &&  worker.assignedshift == false
     if (index !== -1 ) {
-                availableWorkerFound = true;
+            availableWorkerFound = true;
         if(worker.assignedshift == false) {
 
         //TODO AGREGAR FLAG DE YA TIENE UN TURNO->
@@ -104,32 +98,27 @@ class MatchingController {
         //TODO not realy necessary eliminated the day for the actual worker
         worker.availability.splice(index, 1);
         //TODO ELIMININATED FOR ALL WORKER
-        
+        this.deleteShiftsTaken(day,sortedWorkers, worker.availability);
         //add matching
-        this.matching.idMatch = countID;
-                this.matching.idShift = shift.id;
-                this.matching.idWorker = worker.id;
-                this.matching.dayShift = day;
-                this.matching.workerPayRate = worker.payrate;
-                
-                this.matchingList.push({
-                    'idMatch': this.matching.idMatch,
-                    'idShift': this.matching.idShift,
-                    'idWorker': this.matching.idWorker,
-                    'payrate':  this.matching.workerPayRate,
-                    'shift': this.matching.dayShift 
-                });
-                
+                this.addMatch(countID,shift.id,worker.id,day,worker.payrate);
                 countID ++;
                 
                 //SORT AGAIN->
-                sortedWorkers = _.sortBy(sortedWorkers, ['availability.length', 'payrate']);
-                console.log('nuevo sortedWorkers-->>>>', sortedWorkers)
+                sortedWorkers = _.sortBy(sortedWorkers, ['availability.length', 'numshift']);
+                console.log('>>>>>>>>>>nuevo sortedWorkers-->>>>', sortedWorkers)
                 
                 break;
             }
             else if(index !== -1 && worker.assignedshift == true) {
-                console.log('===== w o r k e r '+ worker.id +' ==== tiene turno ya '+ worker.assignedshift + "=====");   
+                console.log('===== w o r k e r === '+ worker.id +' ==== tiene turno ya '+ worker.assignedshift + "=====");   
+                let idw =  worker.id;
+                let avaiW = worker.availability;
+                console.log('id es->'+ idw +" avaible > " + avaiW +'####');
+                this.addMatch(countID,shift.id,worker.id,day,worker.payrate);
+
+                worker.availability.splice(index, 1);
+                //BORRARLO DE TODOS
+            
             }
         }// index !=-1    
     } //loop workers
@@ -152,8 +141,56 @@ class MatchingController {
     }
   }
  }
-// 
-    eliminatedEqual(shifts, workers) {
+
+    //ADD 
+    addMatch(id, idShift,workerId,dayShift,payRate) {
+        this.matching.idMatch       = id;
+        this.matching.idShift       = idShift;
+        this.matching.idWorker      = workerId;
+        this.matching.dayShift      = dayShift;
+        this.matching.workerPayRate = payRate;
+        
+        this.matchingList.push({
+            'idMatch': this.matching.idMatch,
+            'idShift': this.matching.idShift,
+            'idWorker': this.matching.idWorker,
+            'payrate':  this.matching.workerPayRate,
+            'shift': this.matching.dayShift 
+        });
+        // console.log('###### this.matchingList###',  this.matchingList);
+    }
+
+    deleteShiftsTaken(day,listWorkers, daysList) {
+        console.log('#####deleteShiftsTaken#######  DAY-> '+ day);
+        console.log('#####deleteShiftsTaken#######  list-> '+ listWorkers);
+        console.log('#####deleteShiftsTaken#######  DAyLIst-> '+ daysList);
+    
+        for(let i = 0; i < listWorkers.length-1; i++) { 
+
+            for(let j = 0;j < listWorkers[i].availability.length-1; j++) {
+
+                console.log('#####*/*/*/*/*/*/*/*/'+ listWorkers[i].availability[j] );
+                if(listWorkers[i].availability[j] == day) {
+                    listWorkers.splice(j, 1); 
+                    console.log('BORRRA---|-----|---|--|--| '+ listWorkers[i].availability[j] );
+                }
+            }
+        }
+//     if (listWorkers[i] === day){
+//         listWorkers.splice(i, 1);}
+        // _.remove(listWorkers, function (e) {
+        //     let x = e.availability;
+        //     console.log('_LODAHS-> DAY   -->' + day + '------------');
+        //     console.log('_LODAHS-> xxxxx    -->' + x);
+        //     return e.availability == day;
+        // });
+
+    }
+}
+
+module.exports = MatchingController;
+/*
+eliminatedEqual(shifts, workers) {
 
         for(let j=0; j < workers.availability.length; j++){
 
@@ -174,8 +211,4 @@ class MatchingController {
 
         return workers;
     }
-
-
-}
-
-module.exports = MatchingController;
+*/
