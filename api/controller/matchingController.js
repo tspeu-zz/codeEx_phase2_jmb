@@ -152,7 +152,7 @@ class MatchingController {
     }
   }
  }
-//
+// 
     eliminatedEqual(shifts, workers) {
 
         for(let j=0; j < workers.availability.length; j++){
