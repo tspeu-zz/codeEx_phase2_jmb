@@ -71,43 +71,72 @@ class MatchingController {
             worker.assignedshift = false;
             worker.canassigned = false;
             worker.hasmoreavailables = false;
+            worker.free = true;
+            worker.numshiftaken = 0;
+            worker.numshifts = worker.availability.length;
+            worker.numisavailable =  0;
         }
-        
+            // console.log('WORKER---->',worker);
         
         for (let shift of shiftList)  {
             let day = shift.day;
                                 console.log('*********************->DAY: ************* ', day);
             
-        //ITERAR TRUE WORKER
+            let numShiftByWorker = 0;
+            //ITERAR TRUE WORKER
+            //filter actulal Day 
+///////////////////////////////////////////////////////                
+            sortedWorkers.filter(buscar => {
+                buscar.availability === day
+                console.log('encuentra en '+ buscar.id + ' dia > ' + day);
+            
+            });
+
+            let filtros = _.remove(sortedWorkers.availability, (n) => {
+                return n  === day
+            });
+            console.log('--->filtros---> ', filtros);
+/////////////////////////////////////////////////////
+
             for (let worker of sortedWorkers) {
                 //TODO AGREGAR FLAG NO TIENE TURNO ASIGNADO AUN
         // worker.assignedshift = false;    
             
-                                console.log('-----------------> worker: ', worker);
-                                console.log('--------------------------------------');
+                                // console.log('-----------------> worker: ', worker);
+                                // console.log('--------------------------------------');
             
             //check if exists a worker with a day avaible with the day shift
             let index = worker.availability.findIndex(k => k== day);
-            
             //&&  worker.assignedshift == false
             if (index !== -1 ) {
                 availableWorkerFound = true;
                 
-                //TODO AGREGAR FLAG DE YA TIENE UN TURNO->
-                worker.assignedshift = true;
-                worker.hasmoreavailables = (worker.availability.length > 0) ? true: false;
+                numShiftByWorker ++;
 
                 //TODO not realy necessary eliminated the day for the actual worker
                 worker.availability.splice(index, 1);
-                //TODO ELIMININATED FOR ALL WORKER
-                
-                //add matching
+
+
+                //TODO AGREGAR FLAG DE YA TIENE UN TURNO->
+                worker.assignedshift = true;
+                worker.canassigned = (worker.availability.length > 0) ? true: false;
+                worker.hasmoreavailables = (worker.availability.length > 0) ? true: false;
+                worker.numshiftaken = numShiftByWorker;
+                worker.numisavailable =  worker.availability.length - worker.numshiftaken;
+                worker.free =  worker.hasmoreavailables;
+                console.log('-----------------> worker: encontrado-> ', worker);
+                console.log('--------------------------------------');
+                /////////////////////////////////////////////////
+
+                                //add matching
                 this.matching.idMatch = countID;
                 this.matching.idShift = shift.id;
                 this.matching.idWorker = worker.id;
                 this.matching.dayShift = day;
                 this.matching.workerPayRate = worker.payrate;
-                
+
+
+
                 this.matchingList.push({
                     'idMatch': this.matching.idMatch,
                     'idShift': this.matching.idShift,
@@ -120,7 +149,7 @@ class MatchingController {
                 
                 //SORT AGAIN->
                 sortedWorkers = _.sortBy(sortedWorkers, ['availability.length', 'payrate']);
-                console.log('nuevo sortedWorkers-->>>>', sortedWorkers)
+                //console.log('nuevo sortedWorkers-->>>>', sortedWorkers)
                 
                 break;
             }
@@ -145,7 +174,24 @@ class MatchingController {
     }
   }
  }
-//
+///////////////////////////// //////////////////////////////////////
+    tratarWorker(sortedWorkers) {
+
+        for (let worker of sortedWorkers) {
+            worker.assignedshift = false;
+            worker.canassigned = false;
+            worker.hasmoreavailables = false;
+
+        }
+        return sortedWorkers;
+    }
+        
+
+
+
+//////
+
+
     eliminatedEqual(shifts, workers) {
 
         for(let j=0; j < workers.availability.length; j++){
