@@ -71,10 +71,11 @@ class MatchingController {
             worker.assignedshift = false;
             worker.canassigned = false;
             worker.hasmoreavailables = false;
+            worker.numshift = 0;
         }
         
         
-        for (let shift of shiftList)  {
+    for (let shift of shiftList)  {
             let day = shift.day;
                                 console.log('*********************->DAY: ************* ', day);
             
@@ -83,26 +84,29 @@ class MatchingController {
                 //TODO AGREGAR FLAG NO TIENE TURNO ASIGNADO AUN
         // worker.assignedshift = false;    
             
-                                console.log('-----------------> worker: ', worker);
-                                console.log('--------------------------------------');
+// console.log('-----------------> worker: ', worker);
+// console.log('--------------------------------------');
             
             //check if exists a worker with a day avaible with the day shift
             let index = worker.availability.findIndex(k => k== day);
             
-            //&&  worker.assignedshift == false
-            if (index !== -1 ) {
+//SOLO SE ASIGNA A LOS QUE NO TIENEN TURNO AUN
+// &&  worker.assignedshift == false
+    if (index !== -1 ) {
                 availableWorkerFound = true;
-                
-                //TODO AGREGAR FLAG DE YA TIENE UN TURNO->
-                worker.assignedshift = true;
-                worker.hasmoreavailables = (worker.availability.length > 0) ? true: false;
+        if(worker.assignedshift == false) {
 
-                //TODO not realy necessary eliminated the day for the actual worker
-                worker.availability.splice(index, 1);
-                //TODO ELIMININATED FOR ALL WORKER
-                
-                //add matching
-                this.matching.idMatch = countID;
+        //TODO AGREGAR FLAG DE YA TIENE UN TURNO->
+        worker.assignedshift = true;
+        worker.hasmoreavailables = (worker.availability.length > 0) ? true: false;
+        worker.numshift +=1;
+        
+        //TODO not realy necessary eliminated the day for the actual worker
+        worker.availability.splice(index, 1);
+        //TODO ELIMININATED FOR ALL WORKER
+        
+        //add matching
+        this.matching.idMatch = countID;
                 this.matching.idShift = shift.id;
                 this.matching.idWorker = worker.id;
                 this.matching.dayShift = day;
@@ -124,8 +128,11 @@ class MatchingController {
                 
                 break;
             }
-            
-        }
+            else if(index !== -1 && worker.assignedshift == true) {
+                console.log('===== w o r k e r '+ worker.id +' ==== tiene turno ya '+ worker.assignedshift + "=====");   
+            }
+        }// index !=-1    
+    } //loop workers
         
         if (availableWorkerFound === false) {
             //no hay shift disponibles->
@@ -135,7 +142,7 @@ class MatchingController {
         }
         
         allShiftsTaken = true;    
-    }
+    } //loop SHIFT DAYS
     
         if (allShiftsTaken === false) {
             this.msmErr = "No optimal solution found"
