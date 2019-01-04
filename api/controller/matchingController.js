@@ -73,11 +73,10 @@ class MatchingController {
             worker.numshift = 0;
         }
         
-        
-    for (let shift of shiftList)  {
-            let day = shift.day;
-                                console.log('*********************->DAY: ************* ', day);
+        for (let shift of shiftList) {
             
+            let day = shift.day;
+console.log('*********************->DAY: ************* ', day);
         //ITERAR TRUE WORKER
             for (let worker of sortedWorkers) {
 
@@ -86,19 +85,19 @@ class MatchingController {
             
 //SOLO SE ASIGNA A LOS QUE NO TIENEN TURNO AUN
 // &&  worker.assignedshift == false
-    if (index !== -1 ) {
+            if (index !== -1 ) {
             availableWorkerFound = true;
         // if(worker.assignedshift == false) {
 
-        //TODO AGREGAR FLAG DE YA TIENE UN TURNO->
-        worker.assignedshift = true;
-        worker.hasmoreavailables = (worker.availability.length > 0) ? true: false;
-        worker.numshift +=1;
-        
-        //TODO not realy necessary eliminated the day for the actual worker
-        worker.availability.splice(index, 1);
-        //TODO ELIMININATED FOR ALL WORKER
-        this.deleteShiftsTaken(day,sortedWorkers);
+            //TODO AGREGAR FLAG DE YA TIENE UN TURNO->
+            worker.assignedshift = true;
+            worker.hasmoreavailables = (worker.availability.length > 0) ? true: false;
+            worker.numshift +=1;
+            
+            //TODO not realy necessary eliminated the day for the actual worker
+            worker.availability.splice(index, 1);
+            //TODO ELIMININATED FOR ALL WORKER
+            this.deleteShiftsTaken(day,sortedWorkers);
         //add matching
                 this.addMatch(countID,shift.id,worker.id,day,worker.payrate);
                 countID ++;
@@ -108,7 +107,7 @@ class MatchingController {
                 console.log('>>>>>>>>>>nuevo sortedWorkers-->>>>', sortedWorkers)
                 
                 break;
-            // }
+            // 
             // else if(index !== -1 && worker.assignedshift == true) {
             //     console.log('===== w o r k e r === '+ worker.id +' ==== tiene turno ya '+ worker.assignedshift + "=====");   
             //     let idw =  worker.id;
@@ -163,26 +162,47 @@ class MatchingController {
     deleteShiftsTaken(day,workers) {
         console.log('#####deleteShiftsTaken#######  DAY-> ' , day);
         console.log('#####deleteShiftsTaken#######  list-> ', workers);
-        // console.log('#####deleteShiftsTaken#######  DAyLIst-> ', daysList);
-        
+
         console.log('****************', workers);
-        // for(let i = 0; i < shifts.length ; i++) {
-        // let day = shifts[i].day;
-            // console.log('|shifts.day -> ---------------- ||||||  '+ day);
-            for(let j=0; j < workers.length; j++) {
-                //console.log(workers[j]);
-                for(let k= 0;k < workers[j].availability.length; k++) {
-                     console.log(workers[j].availability[k] + ' ID: ' + workers[j].id );
-                    if(workers[j].availability[k] == day){
-                        console.log('|********B O R R A***************'+ workers[j].availability[k] + ' ID: ' + workers[j].id);
-                        let index = workers[j].availability.findIndex(k => k== day);
-                        console.log('index----->', index);
-                        workers[j].availability.splice(index, 1);
-                        console.log('BORRADO----->',workers[j] );
-                    }
+
+        for(let j=0; j < workers.length; j++) {
+            //console.log(workers[j]);
+            for(let k= 0;k < workers[j].availability.length; k++) {
+                console.log(workers[j].availability[k] + ' ID: ' + workers[j].id );
+                if(workers[j].availability[k] == day) {
+                    console.log('|********B O R R A***************'+ workers[j].availability[k] + ' ID: ' + workers[j].id);
+                    let index = workers[j].availability.findIndex(k => k== day);
+                    console.log('index----->', index);
+                    workers[j].availability.splice(index, 1);
+                    console.log('BORRADO----->',workers[j] );
                 }
             }
-        // }
+        }
+
+    console.log('***************************   ',  workers );
+    }
+
+    rankingShifts(day,workers) {
+        console.log('##### rankingShifts#######  DAY-> ' , day);
+        console.log('##### rankingShifts#######  list-> ', workers);
+
+        for(let j=0; j < workers.length; j++) {
+            //console.log(workers[j]);
+            for(let k= 0;k < workers[j].availability.length; k++) {
+                console.log(workers[j].availability[k] + ' ID: ' + workers[j].id );
+                let numSh = 0;
+                if(workers[j].availability[k] == day) {
+                    console.log('|********B O R R A***************'+ workers[j].availability[k] + ' ID: ' + workers[j].id);
+                    let index = workers[j].availability.findIndex(k => k== day);
+                    console.log('index----->', index);
+                    numSh +=1;
+                    workers[j].numshift = numSh;
+                    // /workers[j].availability.splice(index, 1);
+                    console.log('SUMAR----->',workers[j] );
+                }
+            }
+        }
+
     console.log('***************************   ',  workers );
     }
 }
