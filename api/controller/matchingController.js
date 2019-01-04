@@ -88,7 +88,7 @@ class MatchingController {
 // &&  worker.assignedshift == false
     if (index !== -1 ) {
             availableWorkerFound = true;
-        if(worker.assignedshift == false) {
+        // if(worker.assignedshift == false) {
 
         //TODO AGREGAR FLAG DE YA TIENE UN TURNO->
         worker.assignedshift = true;
@@ -108,18 +108,18 @@ class MatchingController {
                 console.log('>>>>>>>>>>nuevo sortedWorkers-->>>>', sortedWorkers)
                 
                 break;
-            }
-            else if(index !== -1 && worker.assignedshift == true) {
-                console.log('===== w o r k e r === '+ worker.id +' ==== tiene turno ya '+ worker.assignedshift + "=====");   
-                let idw =  worker.id;
-                let avaiW = worker.availability;
-                console.log('id es->'+ idw +" avaible > " + avaiW +'####');
-                this.addMatch(countID,shift.id,worker.id,day,worker.payrate);
+            // }
+            // else if(index !== -1 && worker.assignedshift == true) {
+            //     console.log('===== w o r k e r === '+ worker.id +' ==== tiene turno ya '+ worker.assignedshift + "=====");   
+            //     let idw =  worker.id;
+            //     let avaiW = worker.availability;
+            //     console.log('id es->'+ idw +" avaible > " + avaiW +'####');
+            //     this.addMatch(countID,shift.id,worker.id,day,worker.payrate);
 
-                worker.availability.splice(index, 1);
-                //BORRARLO DE TODOS
+            //     worker.availability.splice(index, 1);
+            //     //BORRARLO DE TODOS
             
-            }
+            // }
         }// index !=-1    
     } //loop workers
         
@@ -174,10 +174,10 @@ class MatchingController {
                 for(let k= 0;k < workers[j].availability.length; k++) {
                      console.log(workers[j].availability[k] + ' ID: ' + workers[j].id );
                     if(workers[j].availability[k] == day){
-                        console.log('|*********debe borrar***************'+ workers[j].availability[k] + ' ID: ' + workers[j].id);
+                        console.log('|********B O R R A***************'+ workers[j].availability[k] + ' ID: ' + workers[j].id);
                         let index = workers[j].availability.findIndex(k => k== day);
                         console.log('index----->', index);
-                       // workers[j].availability.splice(index, 1);
+                        workers[j].availability.splice(index, 1);
                         console.log('BORRADO----->',workers[j] );
                     }
                 }
