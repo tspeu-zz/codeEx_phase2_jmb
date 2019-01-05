@@ -7,11 +7,8 @@ const Utils = require('../utils/utils');
         
 class MatchingController {
     
-    //matchingList = [];
     
     constructor(){ 
-        // msmOut = "";
-        // msmErr = "";
         this.utils = new Utils();
         this.matching = new Match();
     }
@@ -44,105 +41,130 @@ class MatchingController {
 
         //VALIDATION
 
-    if(checkWorkerList ) {
-        console.log('CHECKEA WORKER', checkWorkerList);
-        this.msmOut = "THERES NO ANY WORKER";
-        this.msmErr= "No optimal solution found";
-        this.matchingList.push(data);
-    } 
-    
-    else {
-        
-        if (checkShiftList) {
-            console.log('CHECKEA SHIFTS', checkShiftList);
-            this.msmOut +="THERES NO ANY SHIFTS";
+        if(checkWorkerList ) {
+            console.log('CHECKEA WORKER', checkWorkerList);
+            this.msmOut = "THERES NO ANY WORKER";
             this.msmErr= "No optimal solution found";
             this.matchingList.push(data);
-        }
-        else {       
+        } 
+        else {
             
-            //list of workers sorted by amount of days availables
-            let sortedWorkers = _.sortBy(workersList, ['availability.length','payrate']);//
+            if (checkShiftList) {
+                console.log('CHECKEA SHIFTS', checkShiftList);
+                this.msmOut +="THERES NO ANY SHIFTS";
+                this.msmErr= "No optimal solution found";
+                this.matchingList.push(data);
+            }
+            else {       
+                
+                //list of workers sorted by amount of days availables
+                //let sortedWorkers = _.sortBy(workersList, ['availability.length','payrate']);//
+                let sortedWorkers = workersList.sort((a, b) => a.availability.length > b.availability.length);
+                let countID = 1; 
+        
+                this.addFLagWorker(sortedWorkers);
+                
+                for (let shift of shiftList)  {    //DAYS
+                    let day = shift.day;
+                    console.log('*********************->DAY: ************* ', day);
+                
+                    //WORKER
+                    for (let worker of sortedWorkers) {
+                        
+                        //check if exists a worker with a day avaible with the day shift
+                        let index = worker.availability.findIndex(k => k== day);
+                        
+                        //SOLO SE ASIGNA A LOS QUE NO TIENEN TURNO AUN // &&  worker.assignedshift == false
+                        if (index !== -1 ) {
+                            availableWorkerFound = true;
+                        
+                        this.rankingShiftsByWorker(worker, sortedWorkers, worker.availability.length, day);
+                        
+                        //ONLY WHEN DONT HAVE ANY SHIFT ASSIGNED - FIRST TIME SHIFT ASSIGNED
+                        if(worker.assignedshift == false) {
 
-            let countID = 1; 
-        //TODO REFACOR
-        for (let worker of sortedWorkers) {
+                            //TODO not realy necessary eliminated the day for the actual worker
+                            worker.availability.splice(index, 1);
+                        
+                            //TODO AGREGAR FLAG DE YA TIENE UN TURNO->
+                            worker.assignedshift = true;
+                            worker.hasmoreavailables = (worker.availability.length > 0) ? true: false;
+                            worker.numshift = worker.availability.length ;
+                            
+                            //TODO ELIMININATED FOR ALL WORKER
+                            //this.deleteShiftsTaken(day, sortedWorkers);
+
+
+
+                            //add matching
+                            this.addMatch(countID,shift.id,worker.id,day,worker.payrate);
+                            countID ++;
+                            
+                            //SORT AGAIN->
+                            sortedWorkers = _.sortBy(sortedWorkers, ['availability.length', 'numshift']);
+                            //console.log('>>>>>>>>>>nuevo sortedWorkers-->>>>', sortedWorkers)
+                            
+                            break;
+                        }
+
+                        else if( worker.assignedshift == true) {
+    
+                            worker.availability.splice(index, 1);
+
+                            //TODO AGREGAR FLAG DE YA TIENE UN TURNO->
+                            worker.hasmoreavailables = (worker.availability.length > 0) ? true: false;
+                            worker.numshift = worker.availability.length ;
+                            
+                            //TODO ELIMININATED FOR ALL WORKER
+                            this.deleteShiftsTaken(day, sortedWorkers);
+
+
+                            //ADD TO MATCH    
+                            this.addMatch(countID,shift.id,worker.id,day,worker.payrate);
+
+                            //SORT AGAIN->
+                            sortedWorkers = _.sortBy(sortedWorkers, ['availability.length', 'numshift']);
+                            //console.log('>>>>>>>>>>nuevo sortedWorkers-->>>>', sortedWorkers)
+                            
+                            break;   
+                
+                            }
+                        }// index !=-1    
+                    } //loop workers
+            
+                    if (availableWorkerFound === false) {
+                        //no hay shift disponibles->
+                        this.msmOut = `There are no workers available for the required ${shiftsWord}`;
+                        allShiftsTaken = false;
+                        break;
+                    }
+                    allShiftsTaken = true;    
+                } //loop SHIFT DAYS
+        
+                if (allShiftsTaken === false) {
+                    this.msmErr = "No optimal solution found"
+                    console.log("No optimal solution found");
+                    this.matchingList.push(data);
+                }
+            }
+        }
+    
+    }
+
+    /*ADD Flag  */
+    addFLagWorker(workersList) {
+
+        for (let worker of workersList) {
             worker.assignedshift = false;
             worker.canassigned = false;
             worker.hasmoreavailables = false;
-            worker.numshift = 0;
+            worker.numshift = worker.availability.length;
         }
-        
-        
-    for (let shift of shiftList)  {
-            let day = shift.day;
-                                console.log('*********************->DAY: ************* ', day);
-            
-        //ITERAR TRUE WORKER
-            for (let worker of sortedWorkers) {
- 
-            //check if exists a worker with a day avaible with the day shift
-            let index = worker.availability.findIndex(k => k== day);
-            
-//SOLO SE ASIGNA A LOS QUE NO TIENEN TURNO AUN
-// &&  worker.assignedshift == false
-    if (index !== -1 ) {
-            availableWorkerFound = true;
-        if(worker.assignedshift == false) {
-
-        //TODO AGREGAR FLAG DE YA TIENE UN TURNO->
-        worker.assignedshift = true;
-        worker.hasmoreavailables = (worker.availability.length > 0) ? true: false;
-        worker.numshift +=1;
-        
-        //TODO not realy necessary eliminated the day for the actual worker
-        worker.availability.splice(index, 1);
-        //TODO ELIMININATED FOR ALL WORKER
-        this.deleteShiftsTaken(day,sortedWorkers, worker.availability);
-        //add matching
-                this.addMatch(countID,shift.id,worker.id,day,worker.payrate);
-                countID ++;
-                
-                //SORT AGAIN->
-                sortedWorkers = _.sortBy(sortedWorkers, ['availability.length', 'numshift']);
-                console.log('>>>>>>>>>>nuevo sortedWorkers-->>>>', sortedWorkers)
-                
-                break;
-            }
-            else if(index !== -1 && worker.assignedshift == true) {
-                console.log('===== w o r k e r === '+ worker.id +' ==== tiene turno ya '+ worker.assignedshift + "=====");   
-                let idw =  worker.id;
-                let avaiW = worker.availability;
-                console.log('id es->'+ idw +" avaible > " + avaiW +'####');
-                this.addMatch(countID,shift.id,worker.id,day,worker.payrate);
-
-                worker.availability.splice(index, 1);
-                //BORRARLO DE TODOS
-            
-            }
-        }// index !=-1    
-    } //loop workers
-        
-        if (availableWorkerFound === false) {
-            //no hay shift disponibles->
-            this.msmOut = `There are no workers available for the required ${shiftsWord}`;
-            allShiftsTaken = false;
-            break;
-        }
-        
-        allShiftsTaken = true;    
-    } //loop SHIFT DAYS
-    
-        if (allShiftsTaken === false) {
-            this.msmErr = "No optimal solution found"
-            console.log("No optimal solution found");
-            this.matchingList.push(data);
-        }
+        // console.log('-------------TRATAR WORKER ---------->', workersList);
+        // console.log('-------------TRATAR WORKER -------------------------->');
     }
-  }
- }
 
-    //ADD 
+    //* ADD MATCH*/
     addMatch(id, idShift,workerId,dayShift,payRate) {
         this.matching.idMatch       = id;
         this.matching.idShift       = idShift;
@@ -160,10 +182,11 @@ class MatchingController {
         // console.log('###### this.matchingList###',  this.matchingList);
     }
 
-    deleteShiftsTaken(day,listWorkers, daysList) {
+
+
+    deleteShiftsTaken(day,listWorkers) {
         console.log('#####deleteShiftsTaken#######  DAY-> '+ day);
-        console.log('#####deleteShiftsTaken#######  list-> '+ listWorkers);
-        console.log('#####deleteShiftsTaken#######  DAyLIst-> '+ daysList);
+
     
         for(let i = 0; i < listWorkers.length-1; i++) { 
 
@@ -171,11 +194,108 @@ class MatchingController {
 
                 console.log('#####*/*/*/*/*/*/*/*/'+ listWorkers[i].availability[j] );
                 if(listWorkers[i].availability[j] == day) {
-                    listWorkers.splice(j, 1); 
                     console.log('BORRRA---|-----|---|--|--| '+ listWorkers[i].availability[j] );
+                    listWorkers.splice(j, 1); 
                 }
             }
         }
+    }
+
+    rankingShiftsByWorker(worker, listOfWorkers, n, day) {
+    
+        let idWorkerActual = worker.id;
+        
+        let listWorkersTemp = listOfWorkers.filter(b => b.id!== worker.id);
+        console.log('idWorkerActual',worker.id);
+        console.log('listWorkersTemp', listWorkersTemp);
+        console.log('n es lenght', n);
+
+        for (let i =0; i < n; i++) { //itera obre avaiability del order
+            let dayActualWork  = worker.availability[i];
+            
+            for (let j =0; j < listWorkersTemp.length; j++) {
+                let indexA = listWorkersTemp[j].availability.length;
+                if (n == indexA ) {
+                    console.log('------------------++++++++>+++>++>',indexA );
+                    
+                        for (let k =0; k < indexA; k++) {
+                            if (dayActualWork == listWorkersTemp[j].availability[k]) {
+                                worker.day = 1;
+                                listWorkersTemp[j].day=1;
+                                console.log('--->listWorkersTemp[j] ',listWorkersTemp[j] );
+                                console.log('--->worker-> ',worker );
+                            }
+                        }
+
+                    }
+
+                }
+
+        }
+
+
+
+
+        // let values = (o) => Object.keys(o).sort().map(k => o[k]).join('|');
+    
+        //let mapped1 = listWorkers.map(o => o).filter()
+        
+        // let mapped2 = listWorkers.map(o => values(o.availability));
+        // let res = mapped1.every(v => mapped2.includes(v));
+
+        // for(let i = 0; i < listWorkers.length; i++) { 
+            
+            
+        //     w["arr_"+i] = listWorkers[i];
+        //     console.log('w["arr_"+i]-->', i);
+        //     console.log('w["arr_"+i]-->', w["arr_"+i]);
+        //     console.log('w[----------------------');
+        // }
+
+        console.log('====================================' );
+    
+    }
+
+    // switch (listWorkers.length) {cd
+    //     case 1: console.log('tiene un 1 turno');
+            
+    //         break;
+        
+    //     case 2: console.log('tiene un 2 turno');
+        
+    //     break;
+
+    //     case 3: console.log('tiene un 3 turno');
+        
+    //     break;
+
+        
+
+    //     default:
+    //         break;
+    // }
+ // for(let j = 0;j < listWorkers[i].numshift; j++) {
+
+            // console.log('#####NUM SHIFTH-> '+ listWorkers[i]);
+            //     let workNow = listWorkers[i];
+            //     let tempWork = null;
+
+            //     if(listWorkers[i].availability[j] == day) {
+            //         console.log('RANKING'+ listWorkers[i].availability[j] );
+            //         listWorkers[i].num = -1;
+            //     }
+            // }
+
+}
+
+module.exports = MatchingController;
+
+
+
+
+
+
+/*
 //     if (listWorkers[i] === day){
 //         listWorkers.splice(i, 1);}
         // _.remove(listWorkers, function (e) {
@@ -185,11 +305,7 @@ class MatchingController {
         //     return e.availability == day;
         // });
 
-    }
-}
 
-module.exports = MatchingController;
-/*
 eliminatedEqual(shifts, workers) {
 
         for(let j=0; j < workers.availability.length; j++){
