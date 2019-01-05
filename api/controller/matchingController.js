@@ -206,22 +206,24 @@ class MatchingController {
         let idWorkerActual = worker.id;
         
         let listWorkersTemp = listOfWorkers.filter(b => b.id!== worker.id);
-        console.log('idWorkerActual',worker.id);
-        console.log('listWorkersTemp', listWorkersTemp);
-        console.log('n es lenght', n);
-
+        console.log('idWorkerActual--->',worker.id);
+        // console.log('listWorkersTemp', listWorkersTemp);
+        // console.log('n es lenght', n);
+        console.log('-+++++++++++++++++++++++++++++++++++++>+++>++>');
         for (let i =0; i < n; i++) { //itera obre avaiability del order
             let dayActualWork  = worker.availability[i];
-            
+            console.log('dayActualWork---| ', dayActualWork);
+
             for (let j =0; j < listWorkersTemp.length; j++) {
                 let indexA = listWorkersTemp[j].availability.length;
                 if (n == indexA ) {
-                    console.log('------------------++++++++>+++>++>',indexA );
+                    // console.log('------------------++++++++>+++>++>',indexA );
                     
                         for (let k =0; k < indexA; k++) {
-                            if (dayActualWork == listWorkersTemp[j].availability[k]) {
-                                worker.day = 1;
-                                listWorkersTemp[j].day=1;
+                            if (dayActualWork === listWorkersTemp[j].availability[k] ) {
+                                worker.day = day.toString().substring(0, 4);
+                                listWorkersTemp[j].day=day.toString().substring(0, 4);
+
                                 console.log('--->listWorkersTemp[j] ',listWorkersTemp[j] );
                                 console.log('--->worker-> ',worker );
                             }
