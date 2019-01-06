@@ -11,8 +11,8 @@ router.post('/match',  (req, res) => {
 
     matchingCtrl.matchingWorker(req, res);
     
-    res.send({ 
-        "msm ": matchingCtrl.msmOut,
+    res.json({ 
+        "msm": matchingCtrl.msmOut,
         "err" : matchingCtrl.msmErr,
         "res": matchingCtrl.matchingList
         });

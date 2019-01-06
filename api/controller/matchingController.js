@@ -21,6 +21,9 @@ class MatchingController {
         let workersList = req.body.workers;
         let shiftList = req.body.shifts;
 
+        //temp
+        this.matchingListTemp = [];
+
         //output
         this.matchingList = [];
         this.msmOut = "";
@@ -38,6 +41,7 @@ class MatchingController {
         let allShiftsTaken = true;
         let availableWorkerFound = false;
         let shitAssigned = false;
+        let existe = false;
 
         //VALIDATION
 
@@ -70,65 +74,68 @@ class MatchingController {
                 
                     //WORKER
                     for (let worker of sortedWorkers) {
-                        
+                        console.log();
                         //check if exists a worker with a day avaible with the day shift
                         let index = worker.availability.findIndex(k => k== day);
-                        
+                        console.log();
                         //SOLO SE ASIGNA A LOS QUE NO TIENEN TURNO AUN // &&  worker.assignedshift == false
                         if (index !== -1 ) {
                             availableWorkerFound = true;
+                            console.log();
+                        //this.rankingShiftsByWorker(worker, sortedWorkers, worker.availability.length, day);
                         
-                        this.rankingShiftsByWorker(worker, sortedWorkers, worker.availability.length, day);
+                        //TODO not realy necessary eliminated the day for the actual worker
                         
                         //ONLY WHEN DONT HAVE ANY SHIFT ASSIGNED - FIRST TIME SHIFT ASSIGNED
                         if(worker.assignedshift == false) {
 
-                            //TODO not realy necessary eliminated the day for the actual worker
                             worker.availability.splice(index, 1);
-                        
+                            console.log();
+                            
                             //TODO AGREGAR FLAG DE YA TIENE UN TURNO->
                             worker.assignedshift = true;
                             worker.hasmoreavailables = (worker.availability.length > 0) ? true: false;
                             worker.numshift = worker.availability.length ;
                             
                             //TODO ELIMININATED FOR ALL WORKER
-                            //this.deleteShiftsTaken(day, sortedWorkers);
-
-
-
+                            this.deleteShiftsTaken(day, sortedWorkers);
+                            console.log();
                             //add matching
-                            this.addMatch(countID,shift.id,worker.id,day,worker.payrate);
+                            this.addMatch(countID, shift.id, worker.id, day, worker.payrate, this.matchingList);
                             countID ++;
-                            
+                            console.log();
                             //SORT AGAIN->
                             sortedWorkers = _.sortBy(sortedWorkers, ['availability.length', 'numshift']);
                             //console.log('>>>>>>>>>>nuevo sortedWorkers-->>>>', sortedWorkers)
-                            
+                            console.log();
                             break;
                         }
-
+//YA TIENE TURNO COMPROBAR EN LO QUE NO TIENEN TURNO AUN
                         else if( worker.assignedshift == true) {
     
-                            worker.availability.splice(index, 1);
+//TODO->  CHECKEAR DUPLICADO--------------------------->  
+                                        
+                            existe = this.searchNewWorker(countID, shift.id, worker.id, day, worker.payrate, sortedWorkers);
 
+                            if(existe == false) { 
+                                worker.availability.splice(index, 1);
+                                console.log();
                             //TODO AGREGAR FLAG DE YA TIENE UN TURNO->
-                            worker.hasmoreavailables = (worker.availability.length > 0) ? true: false;
-                            worker.numshift = worker.availability.length ;
-                            
-                            //TODO ELIMININATED FOR ALL WORKER
-                            this.deleteShiftsTaken(day, sortedWorkers);
-
-
+                                worker.hasmoreavailables = (worker.availability.length > 0) ? true: false;
+                                worker.numshift = worker.availability.length ;
+                                console.log();
+                                //this.deleteShiftsTaken(day, sortedWorkers);
                             //ADD TO MATCH    
-                            this.addMatch(countID,shift.id,worker.id,day,worker.payrate);
-
+                                this.addMatch(countID, shift.id, worker.id, day, worker.payrate, this.matchingList);
+                                console.log();
                             //SORT AGAIN->
-                            sortedWorkers = _.sortBy(sortedWorkers, ['availability.length', 'numshift']);
+                                sortedWorkers = _.sortBy(sortedWorkers, ['availability.length', 'numshift']);
                             //console.log('>>>>>>>>>>nuevo sortedWorkers-->>>>', sortedWorkers)
-                            
-                            break;   
+                                console.log();
+                                break;   
                 
                             }
+                        }
                         }// index !=-1    
                     } //loop workers
             
@@ -151,6 +158,28 @@ class MatchingController {
     
     }
 
+    /** */
+    searchNewWorker(countID, shiftId, workerId, day, payrate, sortedWorkers){
+        let existe = false;
+        for (let workerTemp of sortedWorkers ) {
+            
+            let indexTemp = workerTemp.availability.findIndex(k => k== day);
+            console.log();
+            if(indexTemp !==-1 && workerTemp.assignedshift == false) {
+                console.log();
+                this.addMatch(countID, shiftId, workerId, day, payrate, this.matchingListTemp);
+                this.foundDuplicade = true;
+                existe = true;
+
+                console.log();
+                break;
+            } else {
+                existe = false;
+                //break;
+            }
+        }
+        return existe;
+    }
     /*ADD Flag  */
     addFLagWorker(workersList) {
 
@@ -159,25 +188,21 @@ class MatchingController {
             worker.canassigned = false;
             worker.hasmoreavailables = false;
             worker.numshift = worker.availability.length;
+            worker.sameday = 0;
         }
         // console.log('-------------TRATAR WORKER ---------->', workersList);
         // console.log('-------------TRATAR WORKER -------------------------->');
     }
 
-    //* ADD MATCH*/
-    addMatch(id, idShift,workerId,dayShift,payRate) {
-        this.matching.idMatch       = id;
-        this.matching.idShift       = idShift;
-        this.matching.idWorker      = workerId;
-        this.matching.dayShift      = dayShift;
-        this.matching.workerPayRate = payRate;
+    //* ADD MATCH*/ TODO refactor in OBJECT MODEL
+    addMatch(idMatch, idShift, workerId, dayShift, payRate, list) {
         
-        this.matchingList.push({
-            'idMatch': this.matching.idMatch,
-            'idShift': this.matching.idShift,
-            'idWorker': this.matching.idWorker,
-            'payrate':  this.matching.workerPayRate,
-            'shift': this.matching.dayShift 
+        list.push({
+            'idMatch':  idMatch,
+            'idShift':  idShift,
+            'idWorker': workerId,
+            'shift':    dayShift,
+            'payrate':  payRate
         });
         // console.log('###### this.matchingList###',  this.matchingList);
     }
@@ -188,14 +213,14 @@ class MatchingController {
         console.log('#####deleteShiftsTaken#######  DAY-> '+ day);
 
     
-        for(let i = 0; i < listWorkers.length-1; i++) { 
+        for(let i = 0; i < listWorkers.length; i++) { 
 
-            for(let j = 0;j < listWorkers[i].availability.length-1; j++) {
+            for(let j = 0;j < listWorkers[i].availability.length; j++) {
 
                 console.log('#####*/*/*/*/*/*/*/*/'+ listWorkers[i].availability[j] );
                 if(listWorkers[i].availability[j] == day) {
-                    console.log('BORRRA---|-----|---|--|--| '+ listWorkers[i].availability[j] );
-                    listWorkers.splice(j, 1); 
+                    console.log('BORRRA---| '+listWorkers[i].id+' -----|---|--|--| '+ listWorkers[i].availability[j] );
+                    listWorkers[i].availability.splice(j, 1);  
                 }
             }
         }
@@ -205,14 +230,13 @@ class MatchingController {
     
         let idWorkerActual = worker.id;
         
-        let listWorkersTemp = listOfWorkers.filter(b => b.id!== worker.id);
-        console.log('idWorkerActual--->',worker.id);
-        // console.log('listWorkersTemp', listWorkersTemp);
-        // console.log('n es lenght', n);
         console.log('-+++++++++++++++++++++++++++++++++++++>+++>++>');
+        let listWorkersTemp = listOfWorkers.filter(b => b.id!== worker.id);
+        console.log('idWorkerActual--------------------->',worker.id);
+    
         for (let i =0; i < n; i++) { //itera obre avaiability del order
             let dayActualWork  = worker.availability[i];
-            console.log('dayActualWork---| ', dayActualWork);
+            console.log('dayActualWork----------------------| ', dayActualWork);
 
             for (let j =0; j < listWorkersTemp.length; j++) {
                 let indexA = listWorkersTemp[j].availability.length;
@@ -222,43 +246,45 @@ class MatchingController {
                         for (let k =0; k < indexA; k++) {
                             if (dayActualWork === listWorkersTemp[j].availability[k] ) {
                                 worker.day = day.toString().substring(0, 4);
-                                listWorkersTemp[j].day=day.toString().substring(0, 4);
+                                listWorkersTemp[j].day = day.toString().substring(0, 4);
 
+                                // console.log('--->listWorkersTemp[j] ',listWorkersTemp[j] );
+                                // console.log('--->worker-> ',worker );
+                            }
+                            if (worker.day  === listWorkersTemp[j].day) {
+                                worker.sameday += 1;
+                                listWorkersTemp[j].sameday += 1;
                                 console.log('--->listWorkersTemp[j] ',listWorkersTemp[j] );
-                                console.log('--->worker-> ',worker );
                             }
                         }
-
+                        console.log('--->worker-> ',worker );
                     }
-
                 }
-
         }
-
-
-
-
-        // let values = (o) => Object.keys(o).sort().map(k => o[k]).join('|');
-    
-        //let mapped1 = listWorkers.map(o => o).filter()
-        
-        // let mapped2 = listWorkers.map(o => values(o.availability));
-        // let res = mapped1.every(v => mapped2.includes(v));
-
-        // for(let i = 0; i < listWorkers.length; i++) { 
-            
-            
-        //     w["arr_"+i] = listWorkers[i];
-        //     console.log('w["arr_"+i]-->', i);
-        //     console.log('w["arr_"+i]-->', w["arr_"+i]);
-        //     console.log('w[----------------------');
-        // }
-
         console.log('====================================' );
-    
     }
 
-    // switch (listWorkers.length) {cd
+}  
+module.exports = MatchingController;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// switch (listWorkers.length) {cd
     //     case 1: console.log('tiene un 1 turno');
             
     //         break;
@@ -288,11 +314,22 @@ class MatchingController {
             //     }
             // }
 
-}
+        // }
+        // let values = (o) => Object.keys(o).sort().map(k => o[k]).join('|');
+    
+        //let mapped1 = listWorkers.map(o => o).filter()
+        
+        // let mapped2 = listWorkers.map(o => values(o.availability));
+        // let res = mapped1.every(v => mapped2.includes(v));
 
-module.exports = MatchingController;
-
-
+        // for(let i = 0; i < listWorkers.length; i++) { 
+            
+            
+        //     w["arr_"+i] = listWorkers[i];
+        //     console.log('w["arr_"+i]-->', i);
+        //     console.log('w["arr_"+i]-->', w["arr_"+i]);
+        //     console.log('w[----------------------');
+        // }
 
 
 
