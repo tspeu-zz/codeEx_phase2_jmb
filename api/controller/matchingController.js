@@ -225,6 +225,32 @@ class MatchingController {
             }
         }
     }
+                    //Wenday  
+    deleteNoShiftsTaken(day, listWorkers, worker) {
+        console.log('#####deleteShiftsTaken#######  DAY-> '+ day);
+//THUESDAY-friday>
+        for(let a of worker.availability) {
+            if (a === day) {
+
+            }
+        }
+
+
+
+
+        // for(let i = 0; i < listWorkers.length; i++) { 
+
+        //     for(let j = 0;j < listWorkers[i].availability.length; j++) {
+
+        //         console.log('#####*/*/*/*/*/*/*/*/'+ listWorkers[i].availability[j] );
+        //         if(listWorkers[i].availability[j] == day) {
+        //             console.log('BORRRA---| '+listWorkers[i].id+' -----|---|--|--| '+ listWorkers[i].availability[j] );
+        //             listWorkers[i].availability.splice(j, 1);  
+        //         }
+        //     }
+        // }
+    }
+
 
     rankingShiftsByWorker(worker, listOfWorkers, n, day) {
     
