@@ -4,6 +4,7 @@ const app = express();
 const bodyParser = require("body-parser");
 const _ = require('lodash');
 const REST_API_ROOT = '/api';
+const PORT = 3003;
 
 //ALLOW CORS
 const allowCrossDomain = function(req, res, next) {
@@ -20,7 +21,7 @@ app.use(bodyParser.json());
 
 
 /* Init server listening */
-const server = app.listen(3003, ()=> {
+const server = app.listen(process.env.PORT || PORT, ()=> {
     console.log('server api running at port '+ server.address().port);
 });
 
