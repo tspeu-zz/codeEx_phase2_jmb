@@ -63,17 +63,13 @@ class MatchingController {
             
             //list of workers sorted by amount of days availables
             // let sortedWorkers = _.sortBy(workersList, ['availability.length', 'payrate']);
-            let sortedWorkers = _.sortBy(workersList, ['availability.length']);//, 'payrate'
+        // let sortedWorkers = _.sortBy(workersList, ['availability.length']);//, 'payrate'
+        let sortedWorkers = workersList.sort((a, b) => a.availability.length > b.availability.length);
+    
+        let countID = 1; 
 
-            let countID = 1; 
-        //TODO REFACOR
-        for (let worker of sortedWorkers) {
-            worker.assignedshift = false;
-            worker.canassigned = false;
-            worker.hasmoreavailables = false;
-        }
-        
-        
+        this.addFLagWorker(sortedWorkers);
+
         for (let shift of shiftList)  {
             let day = shift.day;
                                 console.log('*********************->DAY: ************* ', day);
@@ -99,23 +95,11 @@ class MatchingController {
 
                 //TODO not realy necessary eliminated the day for the actual worker
                 worker.availability.splice(index, 1);
-                //TODO ELIMININATED FOR ALL WORKER
-                
-                //add matching
-                this.matching.idMatch = countID;
-                this.matching.idShift = shift.id;
-                this.matching.idWorker = worker.id;
-                this.matching.dayShift = day;
-                this.matching.workerPayRate = worker.payrate;
-                
-                this.matchingList.push({
-                    'idMatch': this.matching.idMatch,
-                    'idShift': this.matching.idShift,
-                    'idWorker': this.matching.idWorker,
-                    'payrate':  this.matching.workerPayRate,
-                    'shift': this.matching.dayShift 
-                });
-                
+                this.deleteShiftsTaken(day, sortedWorkers);
+
+                this.addMatch(countID, shift.id, worker.id, day, worker.payrate, this.matchingList);
+
+                this.msmOut ="";
                 countID ++;
                 
                 //SORT AGAIN->
@@ -123,12 +107,13 @@ class MatchingController {
                 console.log('nuevo sortedWorkers-->>>>', sortedWorkers)
                 
                 break;
+            
             }
             
         }
         
         if (availableWorkerFound === false) {
-            //no hay shift disponibles->
+            this.msmErr = "No optimal solution found";
             this.msmOut = `There are no workers available for the required ${shiftsWord}`;
             allShiftsTaken = false;
             break;
@@ -138,37 +123,49 @@ class MatchingController {
     }
     
         if (allShiftsTaken === false) {
-            this.msmErr = "No optimal solution found"
-            console.log("No optimal solution found");
+            this.msmErr = "No optimal solution found";
+            this.msmOut =`There are no workers available for the required ${shiftsWord}`;
+            console.log("No optimal solution found ", this.msmOut);
             this.matchingList.push(data);
         }
     }
   }
  }
-//
-    eliminatedEqual(shifts, workers) {
-
-        for(let j=0; j < workers.availability.length; j++){
-
-
-            worker.availability.splice(index, 1);
+ 
+ //* ADD MATCH*/
+    addMatch(id, idShift, workerId, dayShift, payRate, list) {
+        list.push({'idMatch': id,
+                    'idShift': idShift,
+                    'idWorker': workerId,
+                    'shift': dayShift,
+                    'payrate': payRate });
+    }
+    
+    /*delete */ 
+    deleteShiftsTaken(day,listWorkers) {
+        //console.log('#####deleteShiftsTaken#######  DAY-> '+ day);
+        for(let i = 0; i < listWorkers.length; i++) { 
+            for(let j = 0;j < listWorkers[i].availability.length; j++) {
+                console.log('#####*/*/*/*/*/*/*/*/'+ listWorkers[i].availability[j] );
+                if(listWorkers[i].availability[j] == day) {
+                    console.log('BORRRA---| '+listWorkers[i].id+' -----|---|--|--| '+ listWorkers[i].availability[j] );
+                    listWorkers[i].availability.splice(j, 1);  
+                }
+            }
         }
-
-
-
-        for(let i=0;i < shifts.length; i ++) {
-            let index = worker.availability.findIndex(k => k== shift[i].day);
-        }
-        
-
-        for(let w=0; w < workers.length; w++) {
-
-        }
-
-        return workers;
     }
 
-
+    /*ADD Flag  */
+    addFLagWorker(workersList) {
+        for (let worker of workersList) {
+            worker.assignedshift = false;
+            worker.canassigned = false;
+            worker.hasmoreavailables = false;
+            worker.numshift = worker.availability.length;
+            worker.sameday = 0;
+        }
+    }
+    
 }
 
 module.exports = MatchingController;
