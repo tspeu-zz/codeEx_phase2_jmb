@@ -80,16 +80,17 @@ class MatchingController {
         this.unEmployedList  = []; 
         this.employedList  = [];
 
-        /*           **/
-        this.addEmployedList(sortedWorkers,this.unEmployedList  ,this.employedList );
-            console.log('this.unEmployedList------->', this.unEmployedList);
-            console.log('this.employedList------->', this.employedList);
-        /*         */
-
+        
         let countID = 1; 
-
+        
+        /*           **/
         this.addFLagWorker(sortedWorkers);
-
+        
+        //INICIALIZA LA PRIMERA VEZ
+        this.addUnEmployeList(sortedWorkers,this.unEmployedList);
+        console.log('this.unEmployedList------->', this.unEmployedList);
+        console.log('this.employedList------->', this.employedList);
+        /*         */
         for (let shift of shiftList) {
 
             let day = shift.day;
@@ -122,7 +123,8 @@ class MatchingController {
                 //SORT LIST AGAIN->
                 sortedWorkers = _.sortBy(sortedWorkers, ['availability.length', 'payrate']);
                         /*           **/
-                this.addEmployedList(sortedWorkers,this.unEmployedList  ,this.employedList );
+                // this.addEmployedList(sortedWorkers,this.unEmployedList  ,this.employedList );
+                this.addEmployedList(sortedWorkers, this.unEmployedList, this.employedList);
                 console.log('this.unEmployedList------->', this.unEmployedList);
                 console.log('this.employedList------->', this.employedList);
     /*         */
@@ -238,19 +240,35 @@ class MatchingController {
     }
 
     //DIVIDE FIRST TIME ALL ARE UNEMPLOYED
-    addUnemployeList(inputlist, unemployedList) {
+    addUnEmployeList(inputlist, unemployedList) {
         for (let unemployed of inputlist) {
             if (unemployed.assignedshift === false) {
-
-                unemployedList.plush(unemployed);
+                unemployedList.push(unemployed);
             }
         }
     }
 
     addEmployedList(inputList, unemployedList, employedList) {
+//SACA DE  UNEMPLOYED y METE EN EMPLOYED
         for (let employed of inputList) {
 
-            (employed.assignedshift === true)? employedList.push(employed) : unemployedList.push(employed);
+            if(employed.assignedshift === true) {
+
+                let index = unemployedList.findIndex(k => k.id === employed.id);
+                if(index !== -1){
+                    unemployedList.splice(index,1);
+                    employedList.push(employed);
+                }
+            }
+            // (employed.assignedshift === true)? employedList.push(employed) : unemployedList.push(employed);
+        }
+    }
+    
+    checkUnemployed(inputlist, item, day) {
+        let index = item.id.findIndex(k => k== day);
+        // worker.availability.splice(index, 1);
+        if(index !== -1){
+            inputlist.splice(index,1);
         }
     }
     
