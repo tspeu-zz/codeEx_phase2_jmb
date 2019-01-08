@@ -7,15 +7,25 @@ const MatchinController = require('../controller/matchingController');
 const matchingCtrl = new MatchinController();
 
 
-router.post('/match',  (req, res) => {
+router.post('/match',  (  req, res) => {
+    // if(err){
+    //     next(err); // Pass errors to Express.
+    //     console.log('ERR> ', err);
+    //     res.json({ 
+    //         "msm": err,
+    //         "err" :err
+    //     });
+    // }
+    // else {
 
-    matchingCtrl.matchingWorker(req, res);
-    
-    res.json({ 
-        "msm": matchingCtrl.msmOut,
-        "err" : matchingCtrl.msmErr,
-        "res": matchingCtrl.matchingList
+        matchingCtrl.matchingWorker(req, res);
+        
+        res.json({ 
+            "msm": matchingCtrl.msmOut,
+            "err" : matchingCtrl.msmErr,
+            "res": matchingCtrl.matchingList
         });
+    // }
 });
 
 

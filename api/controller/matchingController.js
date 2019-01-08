@@ -18,8 +18,10 @@ class MatchingController {
     
 
     matchingWorker(req, res) {
+    try {
 
-        //input
+
+        //input 
         let data = req.body;
         let workersList = req.body.workers;
         let shiftList = req.body.shifts;
@@ -122,16 +124,20 @@ class MatchingController {
         allShiftsTaken = true;    
     }
     
-        if (allShiftsTaken === false) {
-            this.msmErr = "No optimal solution found";
-            this.msmOut =`There are no workers available for the required ${shiftsWord}`;
-            console.log("No optimal solution found ", this.msmOut);
-            this.matchingList.push(data);
+            if (allShiftsTaken === false) {
+                this.msmErr = "No optimal solution found";
+                this.msmOut =`There are no workers available for the required ${shiftsWord}`;
+                console.log("No optimal solution found ", this.msmOut);
+                this.matchingList.push(data);
+            }
         }
     }
-  }
- }
- 
+    
+    } catch (err) {
+        console.log('ERROR', err);
+        this.msmErr = err;
+    }
+}
  //* ADD MATCH*/
     addMatch(id, idShift, workerId, dayShift, payRate, list) {
         list.push({'idMatch': id,

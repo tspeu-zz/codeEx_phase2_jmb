@@ -18,7 +18,10 @@ app.use(allowCrossDomain);
 /* Express configuration */
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(bodyParser.json());
-
+app.use((err, req, res, next) => {
+    // log the error...
+    res.sendStatus(err.httpStatusCode).json(err)
+  });
 
 /* Init server listening */
 const server = app.listen(process.env.PORT || PORT, ()=> {
