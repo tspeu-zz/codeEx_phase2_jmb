@@ -13,13 +13,15 @@ class MatchingController {
         // msmOut = "";
         // msmErr = "";
         this.utils = new Utils();
-        this.matching = new Match();
+        this.matchingModel = new Match();
     }
     
 
+    /* @PARAMS INPUT
+    ** {workers[] shift []}     
+    */
     matchingWorker(req, res) {
     try {
-
 
         //input 
         let data = req.body;
@@ -34,7 +36,7 @@ class MatchingController {
         //array validations | expected false
         let checkWorkerList = this.utils.checkEmptyArrList(workersList);
         let checkShiftList = this.utils.checkEmptyArrList(shiftList);
-        let lenghWorker = workersList.length;
+        // let lenghWorker = workersList.length;
         let lenghShift = shiftList.length;
         let shiftsWord = (lenghShift > 1) ? 'shifts' : 'shift';
 
@@ -42,12 +44,12 @@ class MatchingController {
         //validation flags
         let allShiftsTaken = true;
         let availableWorkerFound = false;
-        let shitAssigned = false;
+        // let shitAssigned = false;
 
-        //VALIDATION
+        /*VALIDATION  Check for empty input */ 
 
     if(checkWorkerList ) {
-        console.log('CHECKEA WORKER', checkWorkerList);
+    
         this.msmOut = "THERES NO ANY WORKER";
         this.msmErr= "No optimal solution found";
         this.matchingList.push(data);
@@ -55,8 +57,9 @@ class MatchingController {
     
     else {
         
+        //Check for empty input 
         if (checkShiftList) {
-            console.log('CHECKEA SHIFTS', checkShiftList);
+        
             this.msmOut +="THERES NO ANY SHIFTS";
             this.msmErr= "No optimal solution found";
             this.matchingList.push(data);
@@ -66,28 +69,22 @@ class MatchingController {
             //list of workers sorted by amount of days availables
             // let sortedWorkers = _.sortBy(workersList, ['availability.length', 'payrate']);
         // let sortedWorkers = _.sortBy(workersList, ['availability.length']);//, 'payrate'
-        let sortedWorkers = workersList.sort((a, b) => a.availability.length > b.availability.length);
+        let sortedWorkers = workersList.sort((a, b) => a.availability.length > b.availability.length && a.payrate < b.payrate);
     
         let countID = 1; 
 
         this.addFLagWorker(sortedWorkers);
 
-        for (let shift of shiftList)  {
+        for (let shift of shiftList) {
+
             let day = shift.day;
-                                console.log('*********************->DAY: ************* ', day);
-            
+                                
         //ITERAR TRUE WORKER
             for (let worker of sortedWorkers) {
-                //TODO AGREGAR FLAG NO TIENE TURNO ASIGNADO AUN
-        // worker.assignedshift = false;    
-            
-                                console.log('-----------------> worker: ', worker);
-                                console.log('--------------------------------------');
-            
+
             //check if exists a worker with a day avaible with the day shift
             let index = worker.availability.findIndex(k => k== day);
             
-            //&&  worker.assignedshift == false
             if (index !== -1 ) {
                 availableWorkerFound = true;
                 
@@ -95,18 +92,19 @@ class MatchingController {
                 worker.assignedshift = true;
                 worker.hasmoreavailables = (worker.availability.length > 0) ? true: false;
 
-                //TODO not realy necessary eliminated the day for the actual worker
+                //eliminated the day for the actual worker
                 worker.availability.splice(index, 1);
                 this.deleteShiftsTaken(day, sortedWorkers);
 
-                this.addMatch(countID, shift.id, worker.id, day, worker.payrate, this.matchingList);
+                this.setMatchingModel(countID,  shift.id, worker.id, day, worker.payrate);
+
+                this.addMatch(this.matchingModel, this.matchingList);
 
                 this.msmOut ="";
                 countID ++;
                 
-                //SORT AGAIN->
+                //SORT LIST AGAIN->
                 sortedWorkers = _.sortBy(sortedWorkers, ['availability.length', 'payrate']);
-                console.log('nuevo sortedWorkers-->>>>', sortedWorkers)
                 
                 break;
             
@@ -131,30 +129,42 @@ class MatchingController {
                 this.matchingList.push(data);
             }
         }
-    }
+        }
     
     } catch (err) {
         console.log('ERROR', err);
         this.msmErr = err;
     }
 }
- //* ADD MATCH*/
-    addMatch(id, idShift, workerId, dayShift, payRate, list) {
-        list.push({'idMatch': id,
-                    'idShift': idShift,
-                    'idWorker': workerId,
-                    'shift': dayShift,
-                    'payrate': payRate });
+ /* ADD MATCH TO A LIST OF MATCHING */
+    addMatch(model, list) {
+    
+        list.push({'idMatch':   model.id,
+                    'idShift':  model.idShift,
+                    'idWorker': model.idWorker,
+                    'shift':    model.dayShift,
+                    'payrate':  model.workerPayRate });
     }
     
-    /*delete */ 
+    /*set value to  model */
+    setMatchingModel(id, idShift, workerId, dayShift, payRate) {
+        this.matchingModel.id = id;
+        this.matchingModel.idShift =idShift;
+        this.matchingModel.idWorker =workerId
+        this.matchingModel.dayShift = dayShift
+        this.matchingModel.workerPayRate = payRate;
+        
+        return this.matchingModel;
+    }
+
+    /* delete  day for list of workers*/ 
     deleteShiftsTaken(day,listWorkers) {
-        //console.log('#####deleteShiftsTaken#######  DAY-> '+ day);
+        
         for(let i = 0; i < listWorkers.length; i++) { 
             for(let j = 0;j < listWorkers[i].availability.length; j++) {
-                console.log('#####*/*/*/*/*/*/*/*/'+ listWorkers[i].availability[j] );
+            
                 if(listWorkers[i].availability[j] == day) {
-                    console.log('BORRRA---| '+listWorkers[i].id+' -----|---|--|--| '+ listWorkers[i].availability[j] );
+                    // console.log('BORRRA---| '+listWorkers[i].id+' -----|---|--|--| '+ listWorkers[i].availability[j] );
                     listWorkers[i].availability.splice(j, 1);  
                 }
             }
