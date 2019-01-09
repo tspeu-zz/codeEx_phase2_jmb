@@ -7,7 +7,7 @@ const MatchinController = require('../controller/matchingController');
 const matchingCtrl = new MatchinController();
 
 
-router.post('/match',  (  req, res) => {
+router.post('/match', (req, res) => {
     // if(err){
     //     next(err); // Pass errors to Express.
     //     console.log('ERR> ', err);
@@ -28,16 +28,10 @@ router.post('/match',  (  req, res) => {
     // }
 });
 
-
-
-router.get('/all', (req, res) => {
-    
-    console.log('from here');
-    //
-    res.send('hello from matching router tu');
+router.get('/', (req, res) => { 
+    res.send('<div style="color:#616161;text-align:center;padding:10px;"><h3>API Prueba jm_B</h3>'
+    +'<p> @params req {worker:[], shifths:[]}</p>'
+    +'<p>@out Matching List[]</p></div>');
 });
-
-
-
 
 module.exports = router;
