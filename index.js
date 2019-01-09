@@ -18,12 +18,18 @@ app.use(allowCrossDomain);
 /* Express configuration */
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(bodyParser.json());
+/* Router configuration */
+app.use(REST_API_ROOT, require('./api/routes/router'));
 
+app.use((err, req, res, next) => {
+    // log the error...
+    // res.sendStatus(err.httpStatusCode).json(err);
+    const error = new Error('Not Found!');
+    error.status = 404;
+    next(error);
+});
 
 /* Init server listening */
 const server = app.listen(process.env.PORT || PORT, ()=> {
     console.log('server api running at port '+ server.address().port);
 });
-
-/* Router configuration */
-app.use(REST_API_ROOT, require('./api/routes/router'));

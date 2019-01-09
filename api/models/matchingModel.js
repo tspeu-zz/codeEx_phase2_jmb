@@ -3,11 +3,11 @@
  */
 class MatchingModel {
 
-    constructor( idMatch, idWorker, idShift, dayShift) {
+    constructor( idMatch, idWorker, idShift,dayShift, payrate ) {
         this.idMatch = idMatch;
-        this.idWorker = idWorker;
-        this.workerPayRate = 0;
         this.idShift = idShift;
+        this.idWorker = idWorker;
+        this.workerPayRate = payrate;
         this.dayShift = dayShift;
 
     }
