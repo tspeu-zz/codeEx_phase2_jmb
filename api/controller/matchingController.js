@@ -7,23 +7,28 @@ const Utils = require('../utils/utils');
         
 class MatchingController {
     
-    //matchingList = [];
     
     constructor(){ 
-        // msmOut = "";
-        // msmErr = "";
+
         this.utils = new Utils();
-        this.matching = new Match();
+        this.matchingModel = new Match();
     }
     
 
+    /**
+     * Tries to match  workers with shifts 
+     * @params req, res
+     * @return LisT<Match> entity
+     */
     matchingWorker(req, res) {
 
-//TODO REFACTOR
-        //input
+    try {
+
+        //input 
         let data = req.body;
         let workersList = req.body.workers;
         let shiftList = req.body.shifts;
+    
 
         //output
         this.matchingList = [];
@@ -33,7 +38,7 @@ class MatchingController {
         //array validations | expected false
         let checkWorkerList = this.utils.checkEmptyArrList(workersList);
         let checkShiftList = this.utils.checkEmptyArrList(shiftList);
-        let lenghWorker = workersList.length;
+
         let lenghShift = shiftList.length;
         let shiftsWord = (lenghShift > 1) ? 'shifts' : 'shift';
 
@@ -41,93 +46,238 @@ class MatchingController {
         //validation flags
         let allShiftsTaken = true;
         let availableWorkerFound = false;
-        let shitAssigned = false;
+        // let shitAssigned = false;
 
-        //sort list of workers
-        // let sortedWorkers = _.sortBy(workersList, ['availability.length', 'payrate']);
-        let sortedWorkers = _.sortBy(workersList, ['availability.length']);//, 'payrate'
-
-        let countID = 1;    
-        for (let worker of sortedWorkers){
-            worker.assignedshift = false;
-            worker.canassigned = false;
-        }
-
-
-        for (let shift of shiftList)  {
-            let day = shift.day;
-        console.log('*********************->DAY: ************* ', day);
-
-        //ITERAR TRUE WORKER
-            for (let worker of sortedWorkers) {
-        //TODO AGREGAR FLAG NO TIENE TURNO ASIGNADO AUN
-        // worker.assignedshift = false;    
-            
-                console.log('-----------------> worker: ', worker);
-                // console.log('worker.availability<>> ', worker.availability);
-                // console.log('worker.assignedshift>> ', worker.assignedshift);
-                console.log('--------------------------------------');
-            
-            //check if exists a worker with a day avaible with the day shift
-            let index = worker.availability.findIndex(k => k== day);
+        /*VALIDATION  checks if the input array is empty */ 
+    if(checkWorkerList ) {
+    
+        this.msmOut = "THERE ARE NO AVAILABLE WORKERS";
+        this.msmErr= "No optimal solution found !";
+        this.matchingList.push(data);
+    } 
+    
+    else if (checkShiftList) {
         
-            //const index = worker.availability.indexOf(day);
-            //console.log('---INDEX --------->', index);
+            this.msmOut +="THERES NO ANY SHIFTS";
+            this.msmErr= "No optimal solution found !";
+            this.matchingList.push(data);
+    }
+    else {       
+            
+        //list of workers sorted by amount of days availables
+        // let sortedWorkers = _.sortBy(workersList, ['availability.length', 'payrate']);
+        let sortedWorkers = workersList.sort((a, b) => a.availability.length > b.availability.length && a.payrate < b.payrate);
+        this.unEmployedList  = []; 
+        this.employedList  = [];
 
-                //&&  worker.assignedshift == false
+        
+        let countID = 1; 
+        
+        /*           **/
+        this.addFLagWorker(sortedWorkers);
+        
+        //THE FIRST TIME IS INITIALIZED AS LIST OF UNEMPLOYED
+        this.addUnEmployeList(sortedWorkers,this.unEmployedList);
+        //console.log('this.unEmployedList------->', this.unEmployedList);
+        //console.log('this.employedList------->', this.employedList);
+        /*         */
+        for (let shift of shiftList) {
+
+            let day = shift.day;
+                                
+        // Since we have to provide work to as many workers as possible,
+        // the first thing to check is that we assign a shift to workers 
+        // that don't have any yet.
+        //
+        // Among these 'unemployed' workers, those that have fewer days available will put first.
+        // (that explains the 'sortedWorkers') -> that way, workers with fewer available days will
+        // be served first.
+        //
+    
+            for (let worker of this.unEmployedList) {
+
+                //check if exists a worker with a day avaible with the day shift
+                let index = worker.availability.findIndex(k => k== day);
+            
                 if (index !== -1 ) {
                 availableWorkerFound = true;
-            //console.log('------->se encuentra el dia '+day+' de la lista ' + availableWorkerFound);
-        
-            //TODO AGREGAR FLAG DE YA TIENE UN TURNO->
-                worker.assignedshift = true;
-            
-                //eliminated the day for the actual worker
-                worker.availability.splice(index, 1);
-                // console.log('------->elimina el dia '+day+' de la lista>'+ worker);
-
-                //
-
-                this.matching.idMatch = countID;
-                this.matching.idShift = shift.id;
-                this.matching.idWorker = worker.id;
-                this.matching.dayShift = day;
-                this.matching.workerPayRate = worker.payrate;
                 
-                this.matchingList.push({
-                    'idMatch': this.matching.idMatch,
-                    'idShift': this.matching.idShift,
-                    'idWorker': this.matching.idWorker,
-                    'payrate':  this.matching.workerPayRate,
-                    'shift': this.matching.dayShift 
-                });
+                // That's the only we can really compare two workers: it's not important how many
+                // available days they have in absolute terms, but how many days among the remaining
+                // shifts. Those have fewer days amoong the remaining shifts but be served first.
+                //
+                // Finally, elminating a shift can change the order or workers, one worker that had
+                // as many availble days as another one, might now have fewer. Therefore, we must
+                // sort again both lists: unemployed and employed workers
+                //
+                worker.assignedshift = true;
+                worker.hasmoreavailables = (worker.availability.length > 0) ? true: false;
 
+                //delete the actual day for the  worker
+                worker.availability.splice(index, 1);
+                //delete the actual day for all the workers
+                this.deleteShiftsTaken(day, sortedWorkers);
+
+                this.setMatchingModel(countID,  shift.id, worker.id, day, worker.payrate);
+                this.addMatch(this.matchingModel, this.matchingList);
+                this.msmOut ="";
                 countID ++;
-
-                //vuelves a ordenar->
+                
+                //SORT LIST AGAIN->TODO REFACTOR
                 sortedWorkers = _.sortBy(sortedWorkers, ['availability.length', 'payrate']);
-                console.log('nuevo sortedWorkers-->>>>', sortedWorkers)
+                this.addEmployedList(sortedWorkers, this.unEmployedList, this.employedList);
+                //console.log('this.unEmployedList------->', this.unEmployedList);
+                //console.log('this.employedList------->', this.employedList);
+                
                 break;
+            }
+            
+        }
+            // If we have not found any unemployed worker that can work on that shift,
+            // we search on the list of employed (those workers that already have at least one shift)
+
+            for (let worker of this.employedList) {
+
+                //check if exists a worker with a day avaible with the day shift
+                let index = worker.availability.findIndex(k => k== day);
+                
+                if (index !== -1 ) {
+                availableWorkerFound = true;
+                
+                
+                //worker.assignedshift = true;
+                worker.hasmoreavailables = (worker.availability.length > 0) ? true: false;
+
+                    //eliminated the day for the actual worker
+                    worker.availability.splice(index, 1);
+                    this.deleteShiftsTaken(day, sortedWorkers);
+
+                    this.setMatchingModel(countID,  shift.id, worker.id, day, worker.payrate);
+
+                    this.addMatch(this.matchingModel, this.matchingList);
+
+                    this.msmOut ="";
+                    countID ++;
+                    
+                    //SORT LIST AGAIN->
+                    sortedWorkers = _.sortBy(sortedWorkers, ['availability.length', 'payrate']);
+                            /*           **/
+                    this.addEmployedList(sortedWorkers,this.unEmployedList  ,this.employedList );
+                    
+                    break;
+                }   
+            }
+        
+            // if we not found any worker for any shift day
+            // we send message
+            if (availableWorkerFound === false) {
+                this.msmErr = "No optimal solution found";
+                this.msmOut = `There are no workers available for the required ${shiftsWord}`;
+                allShiftsTaken = false;
+                //break;
+            }
+        
+                allShiftsTaken = true;    
+            }
+    
+                if (allShiftsTaken === false) {
+                    this.msmErr = "No optimal solution found";
+                    this.msmOut =`There are no workers available for the required ${shiftsWord}`;
+                    console.log("No optimal solution found ", this.msmOut);
+                    this.matchingList.push(data);
                 }
             }
     
-        if (availableWorkerFound === false) {
-            //no hay shift disponibles->
-            this.msmOut = `There are no workers available for the required ${shiftsWord}`;
-            allShiftsTaken = false;
-            break;
-        }
+        } 
         
-        allShiftsTaken = true;    
+        catch (err) {
+            console.log('ERROR', err);
+            this.msmErr = err;
+        }
     }
 
-        if (allShiftsTaken === false) {
-            this.msmErr = "No optimal solution found"
-            console.log("No optimal solution found");
-        }
-
+ /* add entity Maych to the list of MatchingWorkers */
+    addMatch(model, list) {
+    
+        list.push({'idMatch':   model.id,
+                    'idShift':  model.idShift,
+                    'idWorker': model.idWorker,
+                    'shift':    model.dayShift,
+                    'payrate':  model.workerPayRate });
     }
     
+    /*set value to the Entity */
+    setMatchingModel(id, idShift, workerId, dayShift, payRate) {
+        this.matchingModel.id = id;
+        this.matchingModel.idShift =idShift;
+        this.matchingModel.idWorker =workerId
+        this.matchingModel.dayShift = dayShift
+        this.matchingModel.workerPayRate = payRate;
+        
+        return this.matchingModel;
+    }
+
+    // TODO REFACTOR
+    /* delete  day for list of workers*/ 
+    deleteShiftsTaken(day,listWorkers) {
+        // Remove the day from the availability of every  worker
+        for(let i = 0; i < listWorkers.length; i++) { 
+            for(let j = 0;j < listWorkers[i].availability.length; j++) {
+            // Since splice uses indices, we rather iterate with the classical for loop
+            // instead of for .. in
+                if(listWorkers[i].availability[j] == day) {
+                    listWorkers[i].availability.splice(j, 1);  
+                }
+            }
+        }
+    }
+
+    /*ADD Flag to every worker */
+    addFLagWorker(workersList) {
+        for (let worker of workersList) {
+            worker.assignedshift = false;
+            worker.canassigned = false;
+            worker.hasmoreavailables = false;
+            worker.numshift = worker.availability.length;
+            worker.sameday = 0;
+        }
+    }
+
+    //TODO REFACTOR make all in one method
+    // FIRST TIME ALL ARE UNEMPLOYED
+    addUnEmployeList(inputlist, unemployedList) {
+        for (let unemployed of inputlist) {
+            if (unemployed.assignedshift === false) {
+                unemployedList.push(unemployed);
+            }
+        }
+        return unemployedList  = _.sortBy(unemployedList, ['availability.length', 'payrate']);
+
+    }
+
+    addEmployedList(inputList, unemployedList, employedList) {
+    //PULL DE  UNEMPLOYED y PUSH EN EMPLOYED
+        for (let employed of inputList) {
+
+            if(employed.assignedshift === true) {
+
+                let index = unemployedList.findIndex(k => k.id === employed.id);
+                if(index !== -1){
+                    unemployedList.splice(index,1);
+                    employedList.push(employed);
+                }
+            }
+            // (employed.assignedshift === true)? employedList.push(employed) : unemployedList.push(employed);
+        }
+    }
+    
+    checkUnemployed(inputlist, item, day) {
+        let index = item.id.findIndex(k => k== day);
+        // worker.availability.splice(index, 1);
+        if(index !== -1){
+            inputlist.splice(index,1);
+        }
+    }
     
 }
 
