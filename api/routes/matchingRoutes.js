@@ -8,30 +8,27 @@ const matchingCtrl = new MatchinController();
 
 
 router.post('/match', (req, res) => {
-    // if(err){
-    //     next(err); // Pass errors to Express.
-    //     console.log('ERR> ', err);
-    //     res.json({ 
-    //         "msm": err,
-    //         "err" :err
-    //     });
-    // }
-    // else {
 
-        matchingCtrl.matchingWorker(req, res);
-        
-        res.json({ 
-            "msm": matchingCtrl.msmOut,
-            "err" : matchingCtrl.msmErr,
-            "res": matchingCtrl.matchingList
-        });
-    // }
+    matchingCtrl.matchingWorker(req, res);
+    
+    res.json({ 
+        "msm": matchingCtrl.msmOut,
+        "err" : matchingCtrl.msmErr,
+        "res": matchingCtrl.matchingList
+    });
+    
 });
 
 router.get('/', (req, res) => { 
-    res.send('<div style="color:#616161;text-align:center;padding:10px;"><h3>API Prueba jm_B</h3>'
-    +'<p> @params req {worker:[], shifths:[]}</p>'
-    +'<p>@out Matching List[]</p></div>');
+    res.send('<div style="font-family:Verdana,sans-serif;color:#616161;padding: 25px 50px;">'+
+    '<h3>API Prueba jm_B</h3>'+
+    '<ul><li>*** Optimal Match of shifts and workers ***</li>'+
+    '<li>* @params req, res</li>'+
+    '<li>* @return List[Matching]</li></ul>'+
+    '<p>@params req {worker:[], shifths:[]}</p>'+
+    '<p>@out  List[Matching]</p>'+
+    '<p>URL:api/matching/match/</p>'+
+    '<p>METHOD: POST</p></div>');
 });
 
 module.exports = router;

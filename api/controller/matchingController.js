@@ -49,7 +49,7 @@ class MatchingController {
         let availableWorkerFound = false;
         // let shitAssigned = false;
 
-        /*VALIDATION  Check for empty input */ 
+        /*VALIDATION  Check for empty input WORKERS*/ 
 
     if(checkWorkerList ) {
     
@@ -58,7 +58,7 @@ class MatchingController {
         this.matchingList.push(data);
     } 
     
-    //Check for empty input 
+    //Check for empty input SHIFTS
     else if (checkShiftList) {
         
             this.msmOut +="THERES NO ANY SHIFTS";
@@ -76,10 +76,10 @@ class MatchingController {
         
         let countID = 1; 
         
-        /*           **/
+        //TODO REFACTOR ADD FLAGS
         this.addFLagWorker(sortedWorkers);
         
-        //INICIALIZA LA PRIMERA VEZ
+        //INIT LIST FIRST TIME ALL ARE UNEMPLOYED
         this.addUnEmployeList(sortedWorkers,this.unEmployedList);
         console.log('this.unEmployedList------->', this.unEmployedList);
         console.log('this.employedList------->', this.employedList);
@@ -134,8 +134,8 @@ class MatchingController {
                         /*           **/
                 // this.addEmployedList(sortedWorkers,this.unEmployedList  ,this.employedList );
                 this.addEmployedList(sortedWorkers, this.unEmployedList, this.employedList);
-                console.log('this.unEmployedList------->', this.unEmployedList);
-                console.log('this.employedList------->', this.employedList);
+                // console.log('this.unEmployedList------->', this.unEmployedList);
+                // console.log('this.employedList------->', this.employedList);
                 
                 break;
             }
@@ -169,8 +169,8 @@ class MatchingController {
                     sortedWorkers = _.sortBy(sortedWorkers, ['availability.length', 'payrate']);
                             /*           **/
                     this.addEmployedList(sortedWorkers,this.unEmployedList  ,this.employedList );
-                    console.log('this.unEmployedList------->', this.unEmployedList);
-                    console.log('this.employedList------->', this.employedList);
+                    // console.log('this.unEmployedList------->', this.unEmployedList);
+                    // console.log('this.employedList------->', this.employedList);
     
                     
                     break;
@@ -180,16 +180,15 @@ class MatchingController {
             // If we have not found any unemployed worker that can work on that shift, we resort
             // to employed workers (those that already have at least one shift)
 
-            if (availableWorkerFound === false) {
+            allShiftsTaken = true;    
+        }
+        
+            if (availableWorkerFound === false ) {
                 this.msmErr = "No optimal solution found";
                 this.msmOut = `There are no workers available for the required ${shiftsWord}`;
                 allShiftsTaken = false;
-                //break;
+                // break;
             }
-        
-                allShiftsTaken = true;    
-            }
-    
                 if (allShiftsTaken === false) {
                     this.msmErr = "No optimal solution found";
                     this.msmOut =`There are no workers available for the required ${shiftsWord}`;
