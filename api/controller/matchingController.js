@@ -7,7 +7,6 @@ const Utils = require('../utils/utils');
         
 class MatchingController {
     
-    //matchingList = [];
     
     constructor(){ 
 
@@ -49,8 +48,7 @@ class MatchingController {
         let availableWorkerFound = false;
         // let shitAssigned = false;
 
-        /*VALIDATION  Check for empty input WORKERS*/ 
-
+        /*VALIDATION  checks if the input array is empty */ 
     if(checkWorkerList ) {
     
         this.msmOut = "THERE ARE NO AVAILABLE WORKERS";
@@ -58,7 +56,6 @@ class MatchingController {
         this.matchingList.push(data);
     } 
     
-    //Check for empty input SHIFTS
     else if (checkShiftList) {
         
             this.msmOut +="THERES NO ANY SHIFTS";
@@ -76,23 +73,24 @@ class MatchingController {
         
         let countID = 1; 
         
-        //TODO REFACTOR ADD FLAGS
+        /*           **/
         this.addFLagWorker(sortedWorkers);
         
-        //INIT LIST FIRST TIME ALL ARE UNEMPLOYED
+        //THE FIRST TIME IS INITIALIZED AS LIST OF UNEMPLOYED
         this.addUnEmployeList(sortedWorkers,this.unEmployedList);
-        console.log('this.unEmployedList------->', this.unEmployedList);
-        console.log('this.employedList------->', this.employedList);
+        //console.log('this.unEmployedList------->', this.unEmployedList);
+        //console.log('this.employedList------->', this.employedList);
         /*         */
         for (let shift of shiftList) {
 
             let day = shift.day;
                                 
         // Since we have to provide work to as many workers as possible,
-        // the first thing to check is that we assign a shift to workers that don't have any yet.
+        // the first thing to check is that we assign a shift to workers 
+        // that don't have any yet.
         //
-        // Among these 'unemployed' workers, those that have fewer days available are put first.
-        // (that explains the 'sortedList') -> that way, workers with fewer available days will
+        // Among these 'unemployed' workers, those that have fewer days available will put first.
+        // (that explains the 'sortedWorkers') -> that way, workers with fewer available days will
         // be served first.
         //
     
@@ -104,43 +102,39 @@ class MatchingController {
                 if (index !== -1 ) {
                 availableWorkerFound = true;
                 
-                // Once a shift has been taken, remove it for every worker that lists it as available
-                // in both lists: employed and unemployed workers.
-                //
                 // That's the only we can really compare two workers: it's not important how many
                 // available days they have in absolute terms, but how many days among the remaining
                 // shifts. Those have fewer days amoong the remaining shifts but be served first.
                 //
                 // Finally, elminating a shift can change the order or workers, one worker that had
                 // as many availble days as another one, might now have fewer. Therefore, we must
-                // resort both lists: unemployed and employed workers
+                // sort again both lists: unemployed and employed workers
                 //
                 worker.assignedshift = true;
                 worker.hasmoreavailables = (worker.availability.length > 0) ? true: false;
 
-                //delete the day for the actual worker
+                //delete the actual day for the  worker
                 worker.availability.splice(index, 1);
+                //delete the actual day for all the workers
                 this.deleteShiftsTaken(day, sortedWorkers);
 
                 this.setMatchingModel(countID,  shift.id, worker.id, day, worker.payrate);
-
                 this.addMatch(this.matchingModel, this.matchingList);
-
                 this.msmOut ="";
                 countID ++;
                 
-                //SORT LIST AGAIN->
+                //SORT LIST AGAIN->TODO REFACTOR
                 sortedWorkers = _.sortBy(sortedWorkers, ['availability.length', 'payrate']);
-                        /*           **/
-                // this.addEmployedList(sortedWorkers,this.unEmployedList  ,this.employedList );
                 this.addEmployedList(sortedWorkers, this.unEmployedList, this.employedList);
-                // console.log('this.unEmployedList------->', this.unEmployedList);
-                // console.log('this.employedList------->', this.employedList);
+                //console.log('this.unEmployedList------->', this.unEmployedList);
+                //console.log('this.employedList------->', this.employedList);
                 
                 break;
             }
             
         }
+            // If we have not found any unemployed worker that can work on that shift,
+            // we search on the list of employed (those workers that already have at least one shift)
 
             for (let worker of this.employedList) {
 
@@ -150,7 +144,7 @@ class MatchingController {
                 if (index !== -1 ) {
                 availableWorkerFound = true;
                 
-                //TODO FIX FLAGS
+                
                 //worker.assignedshift = true;
                 worker.hasmoreavailables = (worker.availability.length > 0) ? true: false;
 
@@ -169,26 +163,23 @@ class MatchingController {
                     sortedWorkers = _.sortBy(sortedWorkers, ['availability.length', 'payrate']);
                             /*           **/
                     this.addEmployedList(sortedWorkers,this.unEmployedList  ,this.employedList );
-                    // console.log('this.unEmployedList------->', this.unEmployedList);
-                    // console.log('this.employedList------->', this.employedList);
-    
                     
                     break;
                 }   
             }
         
-            // If we have not found any unemployed worker that can work on that shift, we resort
-            // to employed workers (those that already have at least one shift)
-
-            allShiftsTaken = true;    
-        }
-        
-            if (availableWorkerFound === false ) {
+            // if we not found any worker for any shift day
+            // we send message
+            if (availableWorkerFound === false) {
                 this.msmErr = "No optimal solution found";
                 this.msmOut = `There are no workers available for the required ${shiftsWord}`;
                 allShiftsTaken = false;
-                // break;
+                //break;
             }
+        
+                allShiftsTaken = true;    
+            }
+    
                 if (allShiftsTaken === false) {
                     this.msmErr = "No optimal solution found";
                     this.msmOut =`There are no workers available for the required ${shiftsWord}`;
@@ -205,7 +196,7 @@ class MatchingController {
         }
     }
 
- /* ADD MATCH TO A LIST OF MATCHING */
+ /* add entity Maych to the list of MatchingWorkers */
     addMatch(model, list) {
     
         list.push({'idMatch':   model.id,
@@ -215,7 +206,7 @@ class MatchingController {
                     'payrate':  model.workerPayRate });
     }
     
-    /*set value to  model */
+    /*set value to the Entity */
     setMatchingModel(id, idShift, workerId, dayShift, payRate) {
         this.matchingModel.id = id;
         this.matchingModel.idShift =idShift;
@@ -241,7 +232,7 @@ class MatchingController {
         }
     }
 
-    /*ADD Flag  */
+    /*ADD Flag to every worker */
     addFLagWorker(workersList) {
         for (let worker of workersList) {
             worker.assignedshift = false;
@@ -251,14 +242,17 @@ class MatchingController {
             worker.sameday = 0;
         }
     }
-    //TODO REFACTOR
-    //DIVIDE FIRST TIME ALL ARE UNEMPLOYED
+
+    //TODO REFACTOR make all in one method
+    // FIRST TIME ALL ARE UNEMPLOYED
     addUnEmployeList(inputlist, unemployedList) {
         for (let unemployed of inputlist) {
             if (unemployed.assignedshift === false) {
                 unemployedList.push(unemployed);
             }
         }
+        return unemployedList  = _.sortBy(unemployedList, ['availability.length', 'payrate']);
+
     }
 
     addEmployedList(inputList, unemployedList, employedList) {

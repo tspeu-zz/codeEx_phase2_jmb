@@ -29,6 +29,18 @@ app.use((err, req, res, next) => {
     next(error);
 });
 
+app.get('/', (req, res) => { 
+    res.send('<div style="font-family:Verdana,sans-serif;color:#616161;padding: 25px 50px;">'+
+    '<h2>Phase 2 Code exercise</h2>'+
+    '<ul><li>* Objective : Find optimal Match between shifts and workers </li>'+
+    '<li>* @params req, res</li>'+
+    '<li>* @return List[Matching]</li></ul>'+
+    '<p>@params req {worker:[], shifths:[]}</p>'+
+    '<p>@out  List[Matching]</p>'+
+    '<p>URL: api/matching/match/</p>'+
+    '<p>METHOD: POST</p>'+
+    '<p><strong>10/01/2019   |  jm_b</strong></p></div>');
+});
 /* Init server listening */
 const server = app.listen(process.env.PORT || PORT, ()=> {
     console.log('server api running at port '+ server.address().port);

@@ -21,14 +21,15 @@ router.post('/match', (req, res) => {
 
 router.get('/', (req, res) => { 
     res.send('<div style="font-family:Verdana,sans-serif;color:#616161;padding: 25px 50px;">'+
-    '<h3>API Prueba jm_B</h3>'+
-    '<ul><li>*** Optimal Match of shifts and workers ***</li>'+
+    '<h2>Phase 2 Code exercise</h2>'+
+    '<ul><li>* Objective : Find optimal Match between shifts and workers </li>'+
     '<li>* @params req, res</li>'+
     '<li>* @return List[Matching]</li></ul>'+
     '<p>@params req {worker:[], shifths:[]}</p>'+
     '<p>@out  List[Matching]</p>'+
-    '<p>URL:api/matching/match/</p>'+
-    '<p>METHOD: POST</p></div>');
+    '<p>URL: api/matching/match/</p>'+
+    '<p>METHOD: POST</p>'+
+    '<p><strong>10/01/2019   |  jm_b</strong></p></div>');
 });
 
 module.exports = router;

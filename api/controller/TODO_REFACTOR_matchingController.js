@@ -1,3 +1,4 @@
+
 const _ = require('lodash');
 const Match = require('../models/matchingModel');
 const Worker = require('../models/worker');
@@ -7,7 +8,6 @@ const Utils = require('../utils/utils');
 
 class MatchingController {
 
-    //matchingList = [];
 
     constructor(){
         
@@ -45,8 +45,7 @@ class MatchingController {
 
 
 
-            /*VALIDATION  Check for empty input */
-
+            /*VALIDATION  checks if the input array is empty */
             if(checkWorkerList ) {
 
                 this.msmOut = "THERE ARE NO AVAILABLE WORKERS";
@@ -63,10 +62,10 @@ class MatchingController {
             }
             else {
 
+                //THE FIRST TIME IS INITIALIZED AS LIST OF UNEMPLOYED
                 this.unemployedWorkerSortedList  = _.sortBy(workersList, ['availability.length', 'payrate']);
                 this.employedWorkerSortedList  = [];
-
-
+                
                 let countID = 1;
 
 
@@ -95,19 +94,16 @@ class MatchingController {
                             availableWorkerFound = true;
 
 
-                            // Once a shift has been taken, remove it for every worker that lists it as available
-                            // in both lists: employed and unemployed workers.
-                            //
                             // That's the only we can really compare two workers: it's not important how many
                             // available days they have in absolute terms, but how many days among the remaining
                             // shifts. Those have fewer days amoong the remaining shifts but be served first.
                             //
                             // Finally, elminating a shift can change the order or workers, one worker that had
                             // as many availble days as another one, might now have fewer. Therefore, we must
-                            // resort both lists: unemployed and employed workers
+                            // sort again both lists: unemployed and employed workers
                             //
-
                             // this.unemployedWorkerSortedList, this.employedWorkerSortedList = 
+                            
                             this.deleteTakenShift(day, this.unemployedWorkerSortedList, this.employedWorkerSortedList);
 
 
@@ -151,8 +147,6 @@ class MatchingController {
 
                     }
 
-                    // If we still could not find a worker unemployed or employed with that day available
-                    // stop iterating over the shifts
                     if (availableWorkerFound === false) {
                         this.msmErr = "No optimal solution found";
                         this.msmOut = `There are no workers available for the required ${shiftsWord}`;
@@ -198,8 +192,8 @@ class MatchingController {
 
         return this.matchingModel;
     }
-
-    /* delete  day for list of workers*/         //, listWorkers
+    //TODO refactor 
+    /* delete  day for list of workers*/         
     deleteTakenShift(day, unemployedWorkerSortedList, employedWorkerSortedList) {
 
         // Remove the day from the availability of every unemployed worker
@@ -213,6 +207,8 @@ class MatchingController {
             }
         }
 
+            // If we have not found any unemployed worker that can work on that shift,
+            // we search on the list of employed (those workers that already have at least one shift)
         // same for employed workers
         for (employedWorker in employedWorkerSortedList) {
             // Since splice uses indices, we rather iterate with the classical for loop
@@ -224,7 +220,7 @@ class MatchingController {
             }
         }
 
-        // Re-sort both lists:
+        // Re sort both lists:
         newUnemployedWorkerSortedList = _.sortBy(unemployedWorkerSortedList, ['availability.length', 'payrate']);
         newEmployedWorkerSortedList = _.sortBy(employedWorkerSortedList, ['availability.length', 'payrate']);
 
