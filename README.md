@@ -1,0 +1,2 @@
+# codeEx_phase2_jmb
+NODE VERSION COMPATIBLE v8.12.0
