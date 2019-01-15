@@ -197,12 +197,13 @@ class MatchingController {
     deleteTakenShift(day, unemployedWorkerSortedList, employedWorkerSortedList) {
 
         // Remove the day from the availability of every unemployed worker
-        for (unemployedWorker in unemployedWorkerSortedList) {
+        for (let u in unemployedWorkerSortedList) {
             // Since splice uses indices, we rather iterate with the classical for loop
             // instead of for .. in
-            for(let j = 0; j < unemployedWorker.availability.length; j++) {
-                if(unemployedWorker.availability[j] == day) {
-                    unemployedWorker.availability.splice(j, 1);
+            for(let j = 0; j < unemployedWorkerSortedList[u].availability.length; j++) {
+                if(unemployedWorkerSortedList[u].availability[j] == day) {
+                    unemployedWorkerSortedList[u].availability.splice(j, 1);
+                    employedWorkerSortedList.push(unemployedWorkerSortedList[u]);
                 }
             }
         }
@@ -210,21 +211,21 @@ class MatchingController {
             // If we have not found any unemployed worker that can work on that shift,
             // we search on the list of employed (those workers that already have at least one shift)
         // same for employed workers
-        for (employedWorker in employedWorkerSortedList) {
-            // Since splice uses indices, we rather iterate with the classical for loop
-            // instead of for .. in
-            for(let j = 0; j < employedWorker.availability.length; j++) {
-                if(employedWorker.availability[j] == day) {
-                    employedWorker.availability.splice(j, 1);
-                }
-            }
-        }
+        // for (let e in employedWorkerSortedList) {
+        //     // Since splice uses indices, we rather iterate with the classical for loop
+        //     // instead of for .. in
+        //     for(let j = 0; j < employedWorkerSortedList[e].availability.length; j++) {
+        //         if(employedWorkerSortedList[e].availability[j] == day) {
+        //             employedWorkerSortedList[e].availability.splice(j, 1);
+        //         }
+        //     }
+        // }
 
         // Re sort both lists:
-        newUnemployedWorkerSortedList = _.sortBy(unemployedWorkerSortedList, ['availability.length', 'payrate']);
-        newEmployedWorkerSortedList = _.sortBy(employedWorkerSortedList, ['availability.length', 'payrate']);
+        unemployedWorkerSortedList = _.sortBy(unemployedWorkerSortedList, ['availability.length', 'payrate']);
+        employedWorkerSortedList = _.sortBy(employedWorkerSortedList, ['availability.length', 'payrate']);
 
-        return [newUnemployedWorkerSortedList, employedWorkerSortedList];
+        return [unemployedWorkerSortedList, employedWorkerSortedList];
 
     }
 
