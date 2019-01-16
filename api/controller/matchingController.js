@@ -121,6 +121,7 @@ class MatchingController {
                 this.setMatchingModel(countID,  shift.id, worker.id, day, worker.payrate);
                 this.addMatch(this.matchingModel, this.matchingList);
                 this.msmOut ="";
+                this.msmErr ="";
                 countID ++;
                 
                 //SORT LIST AGAIN->TODO REFACTOR
@@ -180,7 +181,7 @@ class MatchingController {
                 allShiftsTaken = true;    
             }
     
-                if (allShiftsTaken === false) {
+                if (allShiftsTaken === false && shiftList[lenghShift].day == day) {
                     this.msmErr = "No optimal solution found";
                     this.msmOut =`There are no workers available for the required ${shiftsWord}`;
                     console.log("No optimal solution found ", this.msmOut);
